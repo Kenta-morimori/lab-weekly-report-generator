@@ -85,7 +85,7 @@ const styles = StyleSheet.create({
   tableRow: {
     flexDirection: "row",
     borderBottomWidth: 0.5,
-    minHeight: 38,
+    minHeight: 40,
   },
   cell: {
     borderRightWidth: 0.5,
@@ -110,7 +110,6 @@ export function WeeklyReportPdf({ data }: Props) {
   const {
     yearLabel,
     name,
-    submissionDate,
     prevWeekLabel,
     currentWeekLabel,
     prevWeekDays,
@@ -152,13 +151,11 @@ export function WeeklyReportPdf({ data }: Props) {
               <Text style={styles.bold}>今週の研究予定</Text>
             </View>
             <View style={styles.labelRow}>
-              <Text style={styles.bold}>研究達成目標（出来る限り数値目標）</Text>
+              <Text style={styles.bold}>
+                研究達成目標{"\n"}（出来る限り数値目標）
+              </Text>
               <Text>：</Text>
               <Text>{currentGoal}</Text>
-            </View>
-            <View style={styles.labelRow}>
-              <Text>提出日：</Text>
-              <Text>{submissionDate}</Text>
             </View>
           </View>
         </View>
@@ -170,7 +167,13 @@ export function WeeklyReportPdf({ data }: Props) {
               <Text style={styles.sectionTitle}>前週（{prevWeekLabel}）</Text>
               <Table
                 rows={prevWeekDays}
-                headers={["日付", "曜日", "大学滞在時間帯", "時間", "研究内容（講義、その他）、行動、達成内容"]}
+                headers={[
+                  "日付",
+                  "曜日",
+                  "大学滞在\n時間帯",
+                  "時間(h)",
+                  "研究内容（講義、その他）、\n行動、達成内容",
+                ]}
               />
               <View style={styles.footerList}>
                 <Text>
@@ -194,16 +197,16 @@ export function WeeklyReportPdf({ data }: Props) {
           <View style={styles.column}>
               <View style={styles.sectionBox}>
                 <Text style={styles.sectionTitle}>今週（{currentWeekLabel}）</Text>
-                <Table
-                  rows={currentWeekDays}
-                  headers={[
-                    "日付",
-                    "曜日",
-                    "大学滞在予定時間帯",
-                    "時間",
-                    "研究内容（講義、その他）、行動予定、休日でもよい",
-                  ]}
-                />
+              <Table
+                rows={currentWeekDays}
+                headers={[
+                  "日付",
+                  "曜日",
+                  "大学滞在予定\n時間帯",
+                  "時間(h)",
+                  "研究内容（講義、その他）、\n行動予定、休日でもよい",
+                ]}
+              />
                 <View style={styles.footerList}>
                   <Text style={styles.footerLine}>
                     <Text style={styles.footerLabel}>備考（行動上配慮すべき内容）：</Text>
@@ -263,13 +266,13 @@ function columnStyle(idx: number) {
   // widths roughly aligned to template
   switch (idx) {
     case 0:
-      return { width: 35 };
+      return { width: 30 };
     case 1:
-      return { width: 22, textAlign: "center" as const };
+      return { width: 24, textAlign: "center" as const };
     case 2:
-      return { width: 140 };
+      return { width: 115 };
     case 3:
-      return { width: 35, textAlign: "center" as const };
+      return { width: 32, textAlign: "center" as const };
     default:
       return { flex: 1 };
   }
