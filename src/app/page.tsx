@@ -2,7 +2,7 @@
 
 "use client";
 
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   useFieldArray,
   useForm,
@@ -88,9 +88,11 @@ function computeDayDerived(day: DayFormValue): DerivedDay {
 
   const breakMinutes = calculateBreakMinutes(day.breakStart, day.breakEnd);
   const minutes =
-    start !== null && end !== null ? Math.max(calculateStayMinutes(day.stayStart, day.stayEnd, day.breakStart, day.breakEnd), 0) : 0;
+    start !== null && end !== null
+      ? Math.max(calculateStayMinutes(day.stayStart, day.stayEnd, day.breakStart, day.breakEnd), 0)
+      : 0;
 
-  return { breakMinutes, minutes, errors };
+  return { breakMinutes, minutes: errors.length ? 0 : minutes, errors };
 }
 const todayIso = format(new Date(), "yyyy-MM-dd");
 const initialWeekInfo = computeWeeksFromReference(todayIso);
@@ -170,24 +172,12 @@ export default function HomePage() {
     }
   }, [referenceDate, replacePrev, replaceCurrent, setValue]);
 
-  const prevComputedDays = useMemo(
-    () => (prevWeekDays ?? []).map(computeDayDerived),
-    [prevWeekDays],
-  );
-  const currentComputedDays = useMemo(
-    () => (currentWeekDays ?? []).map(computeDayDerived),
-    [currentWeekDays],
-  );
+  const prevComputedDays = (prevWeekDays ?? []).map(computeDayDerived);
+  const currentComputedDays = (currentWeekDays ?? []).map(computeDayDerived);
 
-  const totalPrevMinutes = useMemo(
-    () => prevComputedDays.reduce((sum, day) => sum + (day.minutes || 0), 0),
-    [prevComputedDays],
-  );
-  const totalPrevHoursRounded = useMemo(() => roundHoursFromMinutes(totalPrevMinutes), [totalPrevMinutes]);
-  const totalCurrentMinutes = useMemo(
-    () => currentComputedDays.reduce((sum, day) => sum + (day.minutes || 0), 0),
-    [currentComputedDays],
-  );
+  const totalPrevMinutes = prevComputedDays.reduce((sum, day) => sum + (day.minutes || 0), 0);
+  const totalPrevHoursRounded = roundHoursFromMinutes(totalPrevMinutes);
+  const totalCurrentMinutes = currentComputedDays.reduce((sum, day) => sum + (day.minutes || 0), 0);
 
   const onSubmit = async (values: FormValues) => {
     setError(null);
