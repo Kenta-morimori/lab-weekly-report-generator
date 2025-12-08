@@ -58,6 +58,8 @@ const styles = StyleSheet.create({
   gridRow: {
     flexDirection: "row",
     gap: 18,
+    alignItems: "flex-start",
+    marginTop: 8,
   },
   column: {
     flex: 1,
@@ -81,6 +83,10 @@ const styles = StyleSheet.create({
     ...cellBorder,
     paddingVertical: 5,
     paddingHorizontal: 5,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  tableHeaderText: {
     textAlign: "center",
     fontWeight: "bold",
     fontSize: 9,
@@ -94,9 +100,13 @@ const styles = StyleSheet.create({
     ...cellBorder,
     paddingVertical: 5,
     paddingHorizontal: 5,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  cellText: {
     fontSize: 10,
     lineHeight: 1.3,
-    justifyContent: "center",
+    textAlign: "center",
   },
   footerList: {
     marginTop: 8,
@@ -240,16 +250,9 @@ function Table({ rows, headers }: TableProps) {
     <View style={styles.table}>
       <View style={styles.tableHeaderRow}>
         {headers.map((text, idx) => (
-          <Text
-            key={idx}
-            style={[
-              styles.tableHeaderCell,
-              columnStyle(idx),
-              idx === 4 ? { fontSize: 9 } : {},
-            ]}
-          >
-            {text}
-          </Text>
+          <View key={idx} style={[styles.tableHeaderCell, columnStyle(idx)]}>
+            <Text style={[styles.tableHeaderText, idx === 4 ? { fontSize: 9 } : {}]}>{text}</Text>
+          </View>
         ))}
       </View>
       {rows.map((row) => {
@@ -259,15 +262,23 @@ function Table({ rows, headers }: TableProps) {
         const hoursText = row.minutes ? `${(row.minutes / 60).toFixed(1)}` : "";
         return (
           <View key={row.date} style={styles.tableRow}>
-            <Text style={[styles.cell, columnStyle(0)]}>{dateText}</Text>
-            <Text style={[styles.cell, columnStyle(1)]}>{weekday}</Text>
-            <Text style={[styles.cell, columnStyle(2)]}>
-              {timeText}
-            </Text>
-            <Text style={[styles.cell, columnStyle(3)]}>{hoursText}</Text>
-            <Text style={[styles.cell, columnStyle(4), { fontSize: 8.5, lineHeight: 1.25 }]}>
-              {row.content}
-            </Text>
+            <View style={[styles.cell, columnStyle(0)]}>
+              <Text style={styles.cellText}>{dateText}</Text>
+            </View>
+            <View style={[styles.cell, columnStyle(1)]}>
+              <Text style={styles.cellText}>{weekday}</Text>
+            </View>
+            <View style={[styles.cell, columnStyle(2)]}>
+              <Text style={styles.cellText}>{timeText}</Text>
+            </View>
+            <View style={[styles.cell, columnStyle(3)]}>
+              <Text style={styles.cellText}>{hoursText}</Text>
+            </View>
+            <View style={[styles.cell, columnStyle(4)]}>
+              <Text style={[styles.cellText, { fontSize: 8.5, lineHeight: 1.25, textAlign: "left" }]}>
+                {row.content}
+              </Text>
+            </View>
           </View>
         );
       })}
