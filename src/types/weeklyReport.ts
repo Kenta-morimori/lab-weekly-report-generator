@@ -7,6 +7,10 @@ export type DayRecord = {
   stayStart: string;
   /** 大学滞在終了時刻 "18:00" など */
   stayEnd: string;
+  /** 離席開始時刻 "12:00" など */
+  breakStart: string;
+  /** 離席終了時刻 "13:00" など */
+  breakEnd: string;
   /** 離席時間の合計（分） */
   breakMinutes: number;
   /** 計算済みのその日の滞在時間（分） */
@@ -22,7 +26,7 @@ export type WeeklyReportPayload = {
   /** 氏名 */
   name: string;
 
-  /** 提出日 (今週月曜日など) "2025-04-14" 形式を想定 */
+  /** 提出日（自動計算された今週月曜日の日付） "2025-04-14" 形式 */
   submissionDate: string;
 
   /** 前週の週ラベル "2025/04/07〜2025/04/13" など */
@@ -42,8 +46,8 @@ export type WeeklyReportPayload = {
 
   /** 前週の研究達成目標 */
   prevGoal: string;
-  /** 前週の目標達成度 */
-  prevGoalResult: string;
+  /** 前週の目標達成度（% 0-100, 10刻み） */
+  prevGoalResultPercent: number;
   /** ●達成点 */
   achievedPoints: string;
   /** ●課題・反省点 */

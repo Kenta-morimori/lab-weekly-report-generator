@@ -86,7 +86,7 @@ export function WeeklyReportPdf({ data }: Props) {
     currentWeekDays,
     totalPrevHoursRounded,
     prevGoal,
-    prevGoalResult,
+    prevGoalResultPercent,
     achievedPoints,
     issues,
     currentGoal,
@@ -127,7 +127,7 @@ export function WeeklyReportPdf({ data }: Props) {
             </View>
             <View style={styles.sectionRow}>
               <Text style={styles.sectionLabel}>前週の目標達成度</Text>
-              <Text style={styles.textArea}>{prevGoalResult}</Text>
+              <Text style={styles.textArea}>{prevGoalResultPercent}%</Text>
             </View>
             <View style={styles.sectionRow}>
               <Text style={styles.sectionLabel}>●達成点</Text>
@@ -150,7 +150,9 @@ export function WeeklyReportPdf({ data }: Props) {
               <View key={d.date} style={styles.dayRow}>
                 <Text style={styles.dayCellDate}>{d.date}</Text>
                 <Text style={styles.dayCellTime}>
-                  {d.stayStart}〜{d.stayEnd}（休憩 {d.breakMinutes} 分）
+                  {d.stayStart}〜{d.stayEnd}（休憩{" "}
+                  {d.breakStart && d.breakEnd ? `${d.breakStart}〜${d.breakEnd}` : "なし"} /{" "}
+                  {d.breakMinutes} 分）
                 </Text>
                 <Text style={styles.dayCellMinutes}>{d.minutes}</Text>
                 <Text style={styles.dayCellContent}>{d.content}</Text>
@@ -183,7 +185,9 @@ export function WeeklyReportPdf({ data }: Props) {
               <View key={d.date} style={styles.dayRow}>
                 <Text style={styles.dayCellDate}>{d.date}</Text>
                 <Text style={styles.dayCellTime}>
-                  {d.stayStart}〜{d.stayEnd}（休憩 {d.breakMinutes} 分）
+                  {d.stayStart}〜{d.stayEnd}（休憩{" "}
+                  {d.breakStart && d.breakEnd ? `${d.breakStart}〜${d.breakEnd}` : "なし"} /{" "}
+                  {d.breakMinutes} 分）
                 </Text>
                 <Text style={styles.dayCellMinutes}>{d.minutes}</Text>
                 <Text style={styles.dayCellContent}>{d.content}</Text>

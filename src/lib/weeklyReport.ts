@@ -27,22 +27,26 @@ export function deriveFiscalYearLabel(baseDate = new Date()): string {
 export function calculateStayMinutes(
   stayStart: string,
   stayEnd: string,
-  breakMinutes: number,
+  breakStart: string,
+  breakEnd: string,
 ): number {
   if (!stayStart || !stayEnd) return 0;
-
-  const toMinutes = (value: string) => {
-    const [h, m] = value.split(":").map((v) => Number(v));
-    if (Number.isNaN(h) || Number.isNaN(m)) return null;
-    return h * 60 + m;
-  };
 
   const start = toMinutes(stayStart);
   const end = toMinutes(stayEnd);
   if (start === null || end === null) return 0;
 
-  const diff = end - start - Math.max(0, breakMinutes || 0);
+  const breakMinutes = calculateBreakMinutes(breakStart, breakEnd);
+  const diff = end - start - breakMinutes;
   return Math.max(diff, 0);
+}
+
+export function calculateBreakMinutes(breakStart: string, breakEnd: string): number {
+  if (!breakStart || !breakEnd) return 0;
+  const start = toMinutes(breakStart);
+  const end = toMinutes(breakEnd);
+  if (start === null || end === null) return 0;
+  return Math.max(end - start, 0);
 }
 
 export function roundHoursFromMinutes(totalMinutes: number): number {
@@ -88,4 +92,10 @@ function buildWeekDays(startDate: Date): DayTemplate[] {
     const label = `${iso} (${WEEKDAY_JA[date.getDay()]})`;
     return { iso, label };
   });
+}
+
+function toMinutes(value: string): number | null {
+  const [h, m] = value.split(":").map((v) => Number(v));
+  if (Number.isNaN(h) || Number.isNaN(m)) return null;
+  return h * 60 + m;
 }

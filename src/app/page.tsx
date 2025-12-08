@@ -12,6 +12,7 @@ import {
 import { format } from "date-fns";
 import {
   calculateStayMinutes,
+  calculateBreakMinutes,
   computeWeeksFromReference,
   deriveFiscalYearLabel,
   roundHoursFromMinutes,
@@ -24,6 +25,8 @@ type DayFormValue = {
   date: string;
   stayStart: string;
   stayEnd: string;
+  breakStart: string;
+  breakEnd: string;
   breakMinutes: number;
   minutes: number;
   content: string;
@@ -33,9 +36,8 @@ type FormValues = {
   name: string;
   yearLabel: string;
   referenceDate: string;
-  submissionDate: string;
   prevGoal: string;
-  prevGoalResult: string;
+  prevGoalResultPercent: number;
   achievedPoints: string;
   issues: string;
   currentGoal: string;
@@ -44,7 +46,8 @@ type FormValues = {
   currentWeekDays: DayFormValue[];
 };
 
-const TEXT_LIMIT = 200;
+const TEXT_LIMIT = 30;
+const DAY_CONTENT_LIMIT = 200;
 const todayIso = format(new Date(), "yyyy-MM-dd");
 const initialWeekInfo = computeWeeksFromReference(todayIso);
 
@@ -52,6 +55,8 @@ const createDayValue = (label: string): DayFormValue => ({
   date: label,
   stayStart: "",
   stayEnd: "",
+  breakStart: "",
+  breakEnd: "",
   breakMinutes: 0,
   minutes: 0,
   content: "",
@@ -61,9 +66,8 @@ const defaultValues: FormValues = {
   name: "",
   yearLabel: deriveFiscalYearLabel(),
   referenceDate: todayIso,
-  submissionDate: initialWeekInfo.submissionDate,
   prevGoal: "",
-  prevGoalResult: "",
+  prevGoalResultPercent: 0,
   achievedPoints: "",
   issues: "",
   currentGoal: "",
@@ -101,10 +105,10 @@ export default function HomePage() {
   const prevWeekDays = watch("prevWeekDays");
   const currentWeekDays = watch("currentWeekDays");
   const referenceDate = watch("referenceDate");
+  const prevGoalResultPercent = watch("prevGoalResultPercent");
 
   const textCounts = {
     prevGoal: (watch("prevGoal") ?? "").length,
-    prevGoalResult: (watch("prevGoalResult") ?? "").length,
     achievedPoints: (watch("achievedPoints") ?? "").length,
     issues: (watch("issues") ?? "").length,
     currentGoal: (watch("currentGoal") ?? "").length,
@@ -116,7 +120,6 @@ export default function HomePage() {
     try {
       const info = computeWeeksFromReference(referenceDate);
       setWeekInfo(info);
-      setValue("submissionDate", info.submissionDate, { shouldDirty: true });
       replacePrev(info.prevWeekDays.map((d) => createDayValue(d.label)));
       replaceCurrent(info.currentWeekDays.map((d) => createDayValue(d.label)));
     } catch (err) {
@@ -127,11 +130,11 @@ export default function HomePage() {
 
   useEffect(() => {
     prevWeekDays?.forEach((day, index) => {
-      const computed = calculateStayMinutes(
-        day.stayStart,
-        day.stayEnd,
-        Number.isFinite(day.breakMinutes) ? day.breakMinutes : 0,
-      );
+      const breakMinutes = calculateBreakMinutes(day.breakStart, day.breakEnd);
+      const computed = calculateStayMinutes(day.stayStart, day.stayEnd, day.breakStart, day.breakEnd);
+      if (breakMinutes !== day.breakMinutes) {
+        setValue(`prevWeekDays.${index}.breakMinutes`, breakMinutes, { shouldDirty: true });
+      }
       if (computed !== day.minutes) {
         setValue(`prevWeekDays.${index}.minutes`, computed, { shouldDirty: true });
       }
@@ -140,11 +143,11 @@ export default function HomePage() {
 
   useEffect(() => {
     currentWeekDays?.forEach((day, index) => {
-      const computed = calculateStayMinutes(
-        day.stayStart,
-        day.stayEnd,
-        Number.isFinite(day.breakMinutes) ? day.breakMinutes : 0,
-      );
+      const breakMinutes = calculateBreakMinutes(day.breakStart, day.breakEnd);
+      const computed = calculateStayMinutes(day.stayStart, day.stayEnd, day.breakStart, day.breakEnd);
+      if (breakMinutes !== day.breakMinutes) {
+        setValue(`currentWeekDays.${index}.breakMinutes`, breakMinutes, { shouldDirty: true });
+      }
       if (computed !== day.minutes) {
         setValue(`currentWeekDays.${index}.minutes`, computed, { shouldDirty: true });
       }
@@ -167,19 +170,25 @@ export default function HomePage() {
       return;
     }
 
-    const mapDay = (day: DayFormValue): DayRecord => ({
-      date: day.date,
-      stayStart: day.stayStart,
-      stayEnd: day.stayEnd,
-      breakMinutes: Number.isFinite(day.breakMinutes) ? day.breakMinutes : 0,
-      minutes: day.minutes,
-      content: day.content,
-    });
+    const mapDay = (day: DayFormValue): DayRecord => {
+      const breakMinutes = calculateBreakMinutes(day.breakStart, day.breakEnd);
+      const minutes = calculateStayMinutes(day.stayStart, day.stayEnd, day.breakStart, day.breakEnd);
+      return {
+        date: day.date,
+        stayStart: day.stayStart,
+        stayEnd: day.stayEnd,
+        breakStart: day.breakStart,
+        breakEnd: day.breakEnd,
+        breakMinutes,
+        minutes,
+        content: day.content,
+      };
+    };
 
     const payload: WeeklyReportPayload = {
       yearLabel: values.yearLabel.trim() || deriveFiscalYearLabel(),
       name: values.name.trim(),
-      submissionDate: values.submissionDate,
+      submissionDate: weekInfo.submissionDate,
       prevWeekLabel: weekInfo.prevWeekLabel,
       currentWeekLabel: weekInfo.currentWeekLabel,
       prevWeekDays: values.prevWeekDays.map(mapDay),
@@ -187,7 +196,7 @@ export default function HomePage() {
       totalPrevMinutes,
       totalPrevHoursRounded,
       prevGoal: values.prevGoal,
-      prevGoalResult: values.prevGoalResult,
+      prevGoalResultPercent: values.prevGoalResultPercent,
       achievedPoints: values.achievedPoints,
       issues: values.issues,
       currentGoal: values.currentGoal,
@@ -275,48 +284,50 @@ export default function HomePage() {
                   className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm shadow-inner focus:border-sky-400 focus:outline-none focus:ring-2 focus:ring-sky-100"
                 />
               </LabeledField>
-              <LabeledField label="提出日" hint="デフォルト: 今週の月曜日">
-                <input
-                  type="date"
-                  {...register("submissionDate", { required: true })}
-                  className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm shadow-inner focus:border-sky-400 focus:outline-none focus:ring-2 focus:ring-sky-100"
-                />
-              </LabeledField>
             </div>
           </section>
 
-          <section className="rounded-2xl border border-slate-200 bg-white/90 p-6 shadow-sm backdrop-blur">
-            <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-              <TextAreaField
-                label="前週の研究達成目標"
-                {...register("prevGoal", { maxLength: TEXT_LIMIT })}
-                count={textCounts.prevGoal}
-              />
-              <TextAreaField
-                label="前週の目標達成度"
-                {...register("prevGoalResult", { maxLength: TEXT_LIMIT })}
-                count={textCounts.prevGoalResult}
-              />
-              <TextAreaField
-                label="●達成点"
-                {...register("achievedPoints", { maxLength: TEXT_LIMIT })}
-                count={textCounts.achievedPoints}
-              />
-              <TextAreaField
-                label="●課題・反省点"
-                {...register("issues", { maxLength: TEXT_LIMIT })}
-                count={textCounts.issues}
-              />
-              <TextAreaField
-                label="今週の研究達成目標"
-                {...register("currentGoal", { maxLength: TEXT_LIMIT })}
-                count={textCounts.currentGoal}
-              />
-              <TextAreaField
-                label="備考"
-                {...register("notes", { maxLength: TEXT_LIMIT })}
-                count={textCounts.notes}
-              />
+          <section className="rounded-2xl border border-slate-200 bg-white/90 p-6 shadow-sm backdrop-blur space-y-6">
+            <div>
+              <p className="text-xs uppercase tracking-[0.25em] text-slate-500 mb-2">前週に関して</p>
+              <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+                <TextAreaField
+                  label="前週の研究達成目標"
+                  {...register("prevGoal", { maxLength: TEXT_LIMIT })}
+                  count={textCounts.prevGoal}
+                />
+                <GoalSlider
+                  label="前週の目標達成度"
+                  value={prevGoalResultPercent}
+                  onChange={(value) => setValue("prevGoalResultPercent", value, { shouldDirty: true })}
+                />
+                <TextAreaField
+                  label="●達成点"
+                  {...register("achievedPoints", { maxLength: TEXT_LIMIT })}
+                  count={textCounts.achievedPoints}
+                />
+                <TextAreaField
+                  label="●課題・反省点"
+                  {...register("issues", { maxLength: TEXT_LIMIT })}
+                  count={textCounts.issues}
+                />
+              </div>
+            </div>
+
+            <div>
+              <p className="text-xs uppercase tracking-[0.25em] text-slate-500 mb-2">今週に関して</p>
+              <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+                <TextAreaField
+                  label="今週の研究達成目標"
+                  {...register("currentGoal", { maxLength: TEXT_LIMIT })}
+                  count={textCounts.currentGoal}
+                />
+                <TextAreaField
+                  label="備考"
+                  {...register("notes", { maxLength: TEXT_LIMIT })}
+                  count={textCounts.notes}
+                />
+              </div>
             </div>
           </section>
 
@@ -393,15 +404,16 @@ function DayTable<T extends "prevWeekDays" | "currentWeekDays">({
           <h3 className="text-lg font-semibold text-slate-900">{title}</h3>
           <p className="text-xs text-slate-600">{weekLabel}</p>
         </div>
-        <p className="text-[11px] text-slate-500">終了 − 開始 − 離席時間で自動計算</p>
+        <p className="text-[11px] text-slate-500">開始・終了・離席開始/終了から自動計算</p>
       </div>
 
       <div className="divide-y divide-slate-100">
-        <div className="grid grid-cols-[150px,110px,110px,110px,1fr,120px] gap-2 bg-slate-50 px-4 py-2 text-xs font-semibold text-slate-600">
+        <div className="grid grid-cols-[150px,100px,100px,100px,100px,1fr,120px] gap-2 bg-slate-50 px-4 py-2 text-xs font-semibold text-slate-600">
           <span>日付</span>
           <span>開始</span>
           <span>終了</span>
-          <span>離席(分)</span>
+          <span>離席開始</span>
+          <span>離席終了</span>
           <span>研究内容 / 予定内容</span>
           <span className="text-right">滞在時間</span>
         </div>
@@ -412,7 +424,7 @@ function DayTable<T extends "prevWeekDays" | "currentWeekDays">({
           return (
             <div
               key={field.id}
-              className="grid grid-cols-[150px,110px,110px,110px,1fr,120px] items-start gap-2 px-4 py-2 text-xs"
+              className="grid grid-cols-[150px,100px,100px,100px,100px,1fr,120px] items-start gap-2 px-4 py-2 text-xs"
             >
               <div className="flex h-full items-center rounded-lg bg-slate-50 px-2 font-semibold text-slate-800">
                 {day?.date ?? "N/A"}
@@ -428,14 +440,18 @@ function DayTable<T extends "prevWeekDays" | "currentWeekDays">({
                 className="w-full rounded-lg border border-slate-200 bg-white px-2 py-1 shadow-inner focus:border-sky-400 focus:outline-none focus:ring-2 focus:ring-sky-100"
               />
               <input
-                type="number"
-                min={0}
-                {...register(`${prefix}.${index}.breakMinutes` as const, { valueAsNumber: true })}
+                type="time"
+                {...register(`${prefix}.${index}.breakStart` as const)}
+                className="w-full rounded-lg border border-slate-200 bg-white px-2 py-1 shadow-inner focus:border-sky-400 focus:outline-none focus:ring-2 focus:ring-sky-100"
+              />
+              <input
+                type="time"
+                {...register(`${prefix}.${index}.breakEnd` as const)}
                 className="w-full rounded-lg border border-slate-200 bg-white px-2 py-1 shadow-inner focus:border-sky-400 focus:outline-none focus:ring-2 focus:ring-sky-100"
               />
               <textarea
-                {...register(`${prefix}.${index}.content` as const, { maxLength: TEXT_LIMIT })}
-                maxLength={TEXT_LIMIT}
+                {...register(`${prefix}.${index}.content` as const, { maxLength: DAY_CONTENT_LIMIT })}
+                maxLength={DAY_CONTENT_LIMIT}
                 rows={2}
                 className="w-full rounded-lg border border-slate-200 bg-white px-2 py-1 text-xs shadow-inner focus:border-sky-400 focus:outline-none focus:ring-2 focus:ring-sky-100"
                 placeholder="研究内容・行動を入力"
@@ -471,6 +487,55 @@ function LabeledField({ label, children, required, hint }: LabeledFieldProps) {
   );
 }
 
+type GoalSliderProps = {
+  label: string;
+  value: number;
+  onChange: (value: number) => void;
+};
+
+function GoalSlider({ label, value, onChange }: GoalSliderProps) {
+  const safeValue = Number.isFinite(value) ? Math.min(100, Math.max(0, value)) : 0;
+  const handleChange = (next: number) => {
+    const snapped = Math.round(next / 10) * 10;
+    onChange(Math.min(100, Math.max(0, snapped)));
+  };
+
+  return (
+    <div className="flex flex-col gap-2 text-sm">
+      <div className="flex items-center justify-between">
+        <span className="font-semibold text-slate-800">{label}</span>
+        <span className="text-[11px] text-slate-500">{safeValue}%</span>
+      </div>
+      <div className="flex items-center gap-3 rounded-xl border border-slate-200 bg-white px-3 py-2 shadow-inner">
+        <input
+          type="range"
+          min={0}
+          max={100}
+          step={10}
+          value={safeValue}
+          onChange={(e) => handleChange(Number(e.target.value))}
+          className="w-full accent-sky-600"
+          list="goal-percent-ticks"
+        />
+        <input
+          type="number"
+          min={0}
+          max={100}
+          step={10}
+          value={safeValue}
+          onChange={(e) => handleChange(Number(e.target.value))}
+          className="w-16 rounded border border-slate-200 px-2 py-1 text-xs focus:border-sky-400 focus:outline-none focus:ring-2 focus:ring-sky-100"
+        />
+      </div>
+      <datalist id="goal-percent-ticks">
+        {[0, 20, 40, 60, 80, 100].map((tick) => (
+          <option value={tick} key={tick} />
+        ))}
+      </datalist>
+    </div>
+  );
+}
+
 type TextAreaFieldProps = React.TextareaHTMLAttributes<HTMLTextAreaElement> & {
   label: string;
   count: number;
@@ -490,7 +555,7 @@ function TextAreaField({ label, count, ...rest }: TextAreaFieldProps) {
         rows={3}
         maxLength={TEXT_LIMIT}
         className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm shadow-inner focus:border-sky-400 focus:outline-none focus:ring-2 focus:ring-sky-100"
-        placeholder="200文字以内で入力してください"
+        placeholder="30文字以内で入力してください"
       />
     </label>
   );
