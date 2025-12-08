@@ -3,6 +3,7 @@
 import { NextRequest } from "next/server";
 import { pdf } from "@react-pdf/renderer";
 import { WeeklyReportPdf } from "@/pdf/WeeklyReportPdf";
+import { sanitizeNameForFilename } from "@/lib/weeklyReport";
 import type { WeeklyReportPayload } from "@/types/weeklyReport";
 
 export const runtime = "nodejs"; // React-PDF を使うので Node ランタイム
@@ -10,13 +11,16 @@ export const runtime = "nodejs"; // React-PDF を使うので Node ランタイ�
 export async function POST(req: NextRequest) {
   const body = (await req.json()) as WeeklyReportPayload;
 
-  // TODO: ここで body のバリデーション（zod）を入れてもよい
+  if (!body?.name || !body.submissionDate) {
+    return new Response("Invalid payload", { status: 400 });
+  }
 
   const doc = <WeeklyReportPdf data={body} />;
 
   const pdfBuffer = await pdf(doc).toBuffer();
 
-  const filename = `週報_${body.name}_${body.submissionDate}.pdf`;
+  const safeName = sanitizeNameForFilename(body.name.trim()) || "noname";
+  const filename = `週報_${safeName}_${body.submissionDate}.pdf`;
 
   return new Response(pdfBuffer, {
     status: 200,
