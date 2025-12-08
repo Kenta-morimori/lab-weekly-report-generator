@@ -155,8 +155,8 @@ export function WeeklyReportPdf({ data }: Props) {
                 研究達成目標{"\n"}（出来る限り数値目標）
               </Text>
               <Text>：</Text>
-              <Text>{currentGoal}</Text>
             </View>
+            <Text>{currentGoal}</Text>
           </View>
         </View>
 
@@ -171,7 +171,7 @@ export function WeeklyReportPdf({ data }: Props) {
                   "日付",
                   "曜日",
                   "大学滞在\n時間帯",
-                  "時間(h)",
+                  "時間\n(h)",
                   "研究内容（講義、その他）、\n行動、達成内容",
                 ]}
               />
@@ -203,7 +203,7 @@ export function WeeklyReportPdf({ data }: Props) {
                   "日付",
                   "曜日",
                   "大学滞在予定\n時間帯",
-                  "時間(h)",
+                  "時間\n(h)",
                   "研究内容（講義、その他）、\n行動予定、休日でもよい",
                 ]}
               />
@@ -266,13 +266,13 @@ function columnStyle(idx: number) {
   // widths roughly aligned to template
   switch (idx) {
     case 0:
-      return { width: 30 };
+      return { width: 28 };
     case 1:
-      return { width: 24, textAlign: "center" as const };
+      return { width: 20, textAlign: "center" as const };
     case 2:
-      return { width: 115 };
+      return { width: 105 };
     case 3:
-      return { width: 32, textAlign: "center" as const };
+      return { width: 28, textAlign: "center" as const };
     default:
       return { flex: 1 };
   }
