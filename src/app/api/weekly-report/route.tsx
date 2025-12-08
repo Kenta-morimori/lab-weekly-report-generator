@@ -56,6 +56,15 @@ export async function POST(req: NextRequest) {
 
   const pdfBuffer = await pdf(doc).toBuffer();
   const pdfBody = normalizePdfOutput(pdfBuffer);
+  const contentLength =
+    typeof pdfBuffer === "object" && "byteLength" in pdfBuffer
+      ? Number((pdfBuffer as ArrayBufferView | ArrayBuffer | { byteLength: number }).byteLength)
+      : 0;
+
+  if (!contentLength) {
+    console.error("PDF generation returned empty buffer");
+    return new Response("Failed to generate PDF (empty output)", { status: 500 });
+  }
 
   const safeName = sanitizeNameForFilename(data.name.trim()) || "noname";
   const filename = `週報_${safeName}_${data.submissionDate}.pdf`;
@@ -64,6 +73,7 @@ export async function POST(req: NextRequest) {
     status: 200,
     headers: {
       "Content-Type": "application/pdf",
+      ...(contentLength ? { "Content-Length": String(contentLength) } : {}),
       "Content-Disposition": `attachment; filename="${encodeURIComponent(
         filename,
       )}"`,
