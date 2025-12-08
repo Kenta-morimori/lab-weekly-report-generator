@@ -21,7 +21,7 @@ Font.register({
 const cellBorder = {
   borderWidth: 0.5,
   borderColor: "#000",
-  borderStyle: "solid",
+  borderStyle: "solid" as const,
 };
 
 const styles = StyleSheet.create({
