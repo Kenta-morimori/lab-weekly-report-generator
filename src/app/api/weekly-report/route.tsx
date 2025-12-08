@@ -56,12 +56,12 @@ export async function POST(req: NextRequest) {
 
   const pdfBuffer = await pdf(doc).toBuffer();
   const pdfBody = normalizePdfOutput(pdfBuffer);
-  const contentLength =
+  const byteLength =
     typeof pdfBuffer === "object" && "byteLength" in pdfBuffer
       ? Number((pdfBuffer as ArrayBufferView | ArrayBuffer | { byteLength: number }).byteLength)
-      : 0;
+      : null;
 
-  if (!contentLength) {
+  if (byteLength !== null && byteLength <= 0) {
     console.error("PDF generation returned empty buffer");
     return new Response("Failed to generate PDF (empty output)", { status: 500 });
   }
@@ -73,7 +73,7 @@ export async function POST(req: NextRequest) {
     status: 200,
     headers: {
       "Content-Type": "application/pdf",
-      ...(contentLength ? { "Content-Length": String(contentLength) } : {}),
+      ...(byteLength !== null ? { "Content-Length": String(byteLength) } : {}),
       "Content-Disposition": `attachment; filename="${encodeURIComponent(
         filename,
       )}"`,
