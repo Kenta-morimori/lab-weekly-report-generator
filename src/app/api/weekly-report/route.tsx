@@ -2,25 +2,58 @@
 
 import { NextRequest } from "next/server";
 import { pdf } from "@react-pdf/renderer";
+import { z } from "zod";
 import { WeeklyReportPdf } from "@/pdf/WeeklyReportPdf";
 import { sanitizeNameForFilename } from "@/lib/weeklyReport";
 import type { WeeklyReportPayload } from "@/types/weeklyReport";
 
 export const runtime = "nodejs"; // React-PDF を使うので Node ランタイム
 
+const daySchema = z.object({
+  date: z.string().min(1, "date is required"),
+  stayStart: z.string(),
+  stayEnd: z.string(),
+  breakMinutes: z.number().int().nonnegative(),
+  minutes: z.number().int().nonnegative(),
+  content: z.string().max(200, "content must be <= 200 chars"),
+});
+
+const weeklyReportSchema = z.object({
+  yearLabel: z.string().min(1, "yearLabel is required"),
+  name: z.string().min(1, "name is required"),
+  submissionDate: z.string().min(1, "submissionDate is required"),
+  prevWeekLabel: z.string().min(1, "prevWeekLabel is required"),
+  currentWeekLabel: z.string().min(1, "currentWeekLabel is required"),
+  prevWeekDays: z.array(daySchema).length(7, "prevWeekDays must have 7 entries"),
+  currentWeekDays: z.array(daySchema).length(7, "currentWeekDays must have 7 entries"),
+  totalPrevMinutes: z.number().int().nonnegative(),
+  totalPrevHoursRounded: z.number().int().nonnegative(),
+  prevGoal: z.string().max(200, "prevGoal must be <= 200 chars"),
+  prevGoalResult: z.string().max(200, "prevGoalResult must be <= 200 chars"),
+  achievedPoints: z.string().max(200, "achievedPoints must be <= 200 chars"),
+  issues: z.string().max(200, "issues must be <= 200 chars"),
+  currentGoal: z.string().max(200, "currentGoal must be <= 200 chars"),
+  notes: z.string().max(200, "notes must be <= 200 chars"),
+});
+
 export async function POST(req: NextRequest) {
   const body = (await req.json()) as WeeklyReportPayload;
 
-  if (!body?.name || !body.submissionDate) {
-    return new Response("Invalid payload", { status: 400 });
+  const parsed = weeklyReportSchema.safeParse(body);
+  if (!parsed.success) {
+    const message = parsed.error.issues
+      .map((issue) => `${issue.path.join(".") || "root"}: ${issue.message}`)
+      .join("; ");
+    return new Response(`Invalid payload: ${message}`, { status: 400 });
   }
 
-  const doc = <WeeklyReportPdf data={body} />;
+  const data = parsed.data;
+  const doc = <WeeklyReportPdf data={data} />;
 
   const pdfBuffer = await pdf(doc).toBuffer();
 
-  const safeName = sanitizeNameForFilename(body.name.trim()) || "noname";
-  const filename = `週報_${safeName}_${body.submissionDate}.pdf`;
+  const safeName = sanitizeNameForFilename(data.name.trim()) || "noname";
+  const filename = `週報_${safeName}_${data.submissionDate}.pdf`;
 
   return new Response(pdfBuffer, {
     status: 200,
