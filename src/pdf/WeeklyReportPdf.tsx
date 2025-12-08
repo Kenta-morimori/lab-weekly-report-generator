@@ -152,7 +152,7 @@ export function WeeklyReportPdf({ data }: Props) {
             </View>
             <View style={styles.labelRow}>
               <Text style={styles.bold}>
-                研究達成目標{"\n"}（出来る限り数値目標）
+                研究達成目標（出来る限り数値目標）
               </Text>
               <Text>：</Text>
             </View>
@@ -236,7 +236,14 @@ function Table({ rows, headers }: TableProps) {
     <View style={styles.table}>
       <View style={styles.tableHeaderRow}>
         {headers.map((text, idx) => (
-          <Text key={idx} style={[styles.tableHeaderCell, columnStyle(idx)]}>
+          <Text
+            key={idx}
+            style={[
+              styles.tableHeaderCell,
+              columnStyle(idx),
+              idx === 4 ? { fontSize: 9 } : {},
+            ]}
+          >
             {text}
           </Text>
         ))}
@@ -254,7 +261,7 @@ function Table({ rows, headers }: TableProps) {
               {timeText}
             </Text>
             <Text style={[styles.cell, columnStyle(3)]}>{hoursText}</Text>
-            <Text style={[styles.cell, columnStyle(4)]}>{row.content}</Text>
+            <Text style={[styles.cell, columnStyle(4), { fontSize: 9 }]}>{row.content}</Text>
           </View>
         );
       })}
@@ -266,11 +273,11 @@ function columnStyle(idx: number) {
   // widths roughly aligned to template
   switch (idx) {
     case 0:
-      return { width: 30 };
+      return { width: 35 };
     case 1:
       return { width: 28, textAlign: "center" as const };
     case 2:
-      return { width: 80 };
+      return { width: 70 };
     case 3:
       return { width: 28, textAlign: "center" as const };
     default:
