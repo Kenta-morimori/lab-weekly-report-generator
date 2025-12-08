@@ -55,13 +55,10 @@ export async function POST(req: NextRequest) {
   const doc = <WeeklyReportPdf data={data} />;
 
   const pdfBuffer = await pdf(doc).toBuffer();
-  const pdfBody = normalizePdfOutput(pdfBuffer);
-  const byteLength =
-    typeof pdfBuffer === "object" && "byteLength" in pdfBuffer
-      ? Number((pdfBuffer as ArrayBufferView | ArrayBuffer | { byteLength: number }).byteLength)
-      : null;
+  const arrayBuffer = await toArrayBuffer(pdfBuffer);
+  const byteLength = arrayBuffer.byteLength;
 
-  if (byteLength !== null && byteLength <= 0) {
+  if (byteLength <= 0) {
     console.error("PDF generation returned empty buffer");
     return new Response("Failed to generate PDF (empty output)", { status: 500 });
   }
@@ -69,11 +66,11 @@ export async function POST(req: NextRequest) {
   const safeName = sanitizeNameForFilename(data.name.trim()) || "noname";
   const filename = `週報_${safeName}_${data.submissionDate}.pdf`;
 
-  return new Response(pdfBody, {
+  return new Response(arrayBuffer, {
     status: 200,
     headers: {
       "Content-Type": "application/pdf",
-      ...(byteLength !== null ? { "Content-Length": String(byteLength) } : {}),
+      "Content-Length": String(byteLength),
       "Content-Disposition": `attachment; filename="${encodeURIComponent(
         filename,
       )}"`,
@@ -114,4 +111,26 @@ export function normalizePdfOutput(value: unknown): BodyInit {
   } catch {
     throw new TypeError("Unexpected value type for PDF output");
   }
+}
+
+async function toArrayBuffer(value: unknown): Promise<ArrayBuffer> {
+  if (value instanceof ArrayBuffer) return value;
+  if (ArrayBuffer.isView(value)) {
+    const view = value as ArrayBufferView;
+    const clone = new Uint8Array(view.byteLength);
+    clone.set(new Uint8Array(view.buffer, view.byteOffset, view.byteLength));
+    return clone.buffer;
+  }
+  if (value instanceof ReadableStream || (typeof Blob !== "undefined" && value instanceof Blob)) {
+    const resp = new Response(value as BodyInit);
+    return resp.arrayBuffer();
+  }
+  if (typeof Buffer !== "undefined" && Buffer.isBuffer(value)) {
+    const clone = new Uint8Array(value.byteLength);
+    clone.set(value);
+    return clone.buffer;
+  }
+  // Fallback to Response conversion; may throw which will bubble as 500
+  const resp = new Response(value as BodyInit);
+  return resp.arrayBuffer();
 }
