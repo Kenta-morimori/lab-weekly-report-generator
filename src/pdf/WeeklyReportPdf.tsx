@@ -48,6 +48,7 @@ const styles = StyleSheet.create({
   gridRow: {
     flexDirection: "row",
     gap: 18,
+    minHeight: 660,
   },
   column: {
     flex: 1,
@@ -56,10 +57,12 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     padding: 6,
     marginBottom: 12,
+    flex: 1,
   },
   sectionTitle: {
     fontWeight: "bold",
     marginBottom: 6,
+    fontSize: 11,
   },
   table: {
     borderWidth: 1,
@@ -82,7 +85,7 @@ const styles = StyleSheet.create({
   tableRow: {
     flexDirection: "row",
     borderBottomWidth: 0.5,
-    minHeight: 34,
+    minHeight: 38,
   },
   cell: {
     borderRightWidth: 0.5,
@@ -96,6 +99,7 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   footerLabel: { fontWeight: "bold" },
+  footerLine: { marginTop: 2 },
 });
 
 type Props = {
@@ -172,12 +176,14 @@ export function WeeklyReportPdf({ data }: Props) {
                 <Text>
                   <Text style={styles.footerLabel}>前週の目標達成度：</Text> {prevGoalResultPercent}%
                 </Text>
-                <Text>
+                <Text style={styles.footerLine}>
                   <Text style={styles.footerLabel}>●研究活動での達成点：</Text>
+                  {"\n"}
                   {achievedPoints}
                 </Text>
-                <Text>
+                <Text style={styles.footerLine}>
                   <Text style={styles.footerLabel}>●研究活動実施上の課題・問題点・反省点等：</Text>
+                  {"\n"}
                   {issues}
                 </Text>
               </View>
@@ -186,23 +192,31 @@ export function WeeklyReportPdf({ data }: Props) {
 
           {/* 今週 */}
           <View style={styles.column}>
-            <View style={styles.sectionBox}>
-              <Text style={styles.sectionTitle}>今週（{currentWeekLabel}）</Text>
-              <Table
-                rows={currentWeekDays}
-                headers={["日付", "曜日", "大学滞在予定時間帯", "時間", "研究内容（講義、その他）、行動予定、休日でもよい"]}
-              />
-              <View style={styles.footerList}>
-                <Text>
-                  <Text style={styles.footerLabel}>備考（行動上配慮すべき内容）：</Text>
-                  {notes}
-                </Text>
-                <Text>
-                  <Text style={styles.footerLabel}>連絡内容（教員記述欄）：</Text>
-                </Text>
+              <View style={styles.sectionBox}>
+                <Text style={styles.sectionTitle}>今週（{currentWeekLabel}）</Text>
+                <Table
+                  rows={currentWeekDays}
+                  headers={[
+                    "日付",
+                    "曜日",
+                    "大学滞在予定時間帯",
+                    "時間",
+                    "研究内容（講義、その他）、行動予定、休日でもよい",
+                  ]}
+                />
+                <View style={styles.footerList}>
+                  <Text style={styles.footerLine}>
+                    <Text style={styles.footerLabel}>備考（行動上配慮すべき内容）：</Text>
+                    {"\n"}
+                    {notes}
+                  </Text>
+                  <Text style={styles.footerLine}>
+                    <Text style={styles.footerLabel}>連絡内容（教員記述欄）：</Text>
+                    {"\n"}
+                  </Text>
+                </View>
               </View>
             </View>
-          </View>
         </View>
       </Page>
     </Document>
@@ -226,7 +240,7 @@ function Table({ rows, headers }: TableProps) {
       </View>
       {rows.map((row) => {
         const weekday = extractWeekday(row.date);
-        const dateText = ""; // 西暦表示は不要なため空欄
+        const dateText = toDateText(row.date); // 月/日 を表示
         const timeText = row.stayStart && row.stayEnd ? `${row.stayStart}〜${row.stayEnd}` : "―";
         const minutesText = row.minutes ? `${row.minutes} 分` : "";
         return (
@@ -267,6 +281,16 @@ function extractWeekday(dateLabel: string): string {
   if (match) return match[1];
   const date = parseIsoDate(dateLabel);
   return date ? ["日", "月", "火", "水", "木", "金", "土"][date.getDay()] : "";
+}
+
+function toDateText(dateLabel: string): string {
+  const iso = dateLabel.split(" ")[0];
+  if (!iso) return "";
+  const date = parseIsoDate(iso);
+  if (!date) return "";
+  const m = String(date.getMonth() + 1).padStart(2, "0");
+  const d = String(date.getDate()).padStart(2, "0");
+  return `${m}/${d}`;
 }
 
 function parseIsoDate(value: string): Date | null {
