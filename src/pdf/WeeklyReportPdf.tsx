@@ -18,6 +18,12 @@ Font.register({
   ],
 });
 
+const cellBorder = {
+  borderWidth: 0.5,
+  borderColor: "#000",
+  borderStyle: "solid",
+};
+
 const styles = StyleSheet.create({
   page: {
     paddingTop: 36,
@@ -54,9 +60,6 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   sectionBox: {
-    borderWidth: 0,
-    borderColor: "#000",
-    borderStyle: "solid",
     padding: 6,
     marginBottom: 12,
     flex: 1,
@@ -72,9 +75,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#f5f5f5",
   },
   tableHeaderCell: {
-    borderWidth: 0.5,
-    borderColor: "#000",
-    borderStyle: "solid",
+    ...cellBorder,
     paddingVertical: 5,
     paddingHorizontal: 5,
     textAlign: "center",
@@ -87,9 +88,7 @@ const styles = StyleSheet.create({
     minHeight: 40,
   },
   cell: {
-    borderWidth: 0.5,
-    borderColor: "#000",
-    borderStyle: "solid",
+    ...cellBorder,
     paddingVertical: 5,
     paddingHorizontal: 5,
     fontSize: 10,
