@@ -2,7 +2,7 @@
 
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
   useFieldArray,
   useForm,
@@ -50,7 +50,7 @@ type DerivedDay = {
   errors: string[];
 };
 
-const TEXT_LIMIT = 30;
+const TEXT_LIMIT = 50;
 const DAY_CONTENT_LIMIT = 200;
 const ERROR_PREFIX = "入力エラー:";
 
@@ -124,6 +124,7 @@ export default function HomePage() {
   const [weekInfo, setWeekInfo] = useState(initialWeekInfo);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const lastReferenceDate = useRef<string | null>(defaultValues.referenceDate);
 
   const {
     control,
@@ -161,16 +162,24 @@ export default function HomePage() {
 
   useEffect(() => {
     if (!referenceDate) return;
+    if (lastReferenceDate.current === referenceDate) return;
+    lastReferenceDate.current = referenceDate;
     try {
       const info = computeWeeksFromReference(referenceDate);
       setWeekInfo(info);
-      replacePrev(info.prevWeekDays.map((d) => createDayValue(d.label)));
-      replaceCurrent(info.currentWeekDays.map((d) => createDayValue(d.label)));
+      const mergeDays = (current: DayFormValue[] | undefined, labels: string[]) =>
+        labels.map((label, idx) => {
+          const existing = current?.[idx];
+          return existing ? { ...existing, date: label } : createDayValue(label);
+        });
+
+      replacePrev(mergeDays(prevWeekDays, info.prevWeekDays.map((d) => d.label)));
+      replaceCurrent(mergeDays(currentWeekDays, info.currentWeekDays.map((d) => d.label)));
     } catch (err) {
       console.error(err);
       setError("日付の計算中に問題が発生しました。日付を確認してください。");
     }
-  }, [referenceDate, replacePrev, replaceCurrent, setValue]);
+  }, [referenceDate, replacePrev, replaceCurrent, prevWeekDays, currentWeekDays]);
 
   const prevComputedDays = (prevWeekDays ?? []).map(computeDayDerived);
   const currentComputedDays = (currentWeekDays ?? []).map(computeDayDerived);
@@ -290,7 +299,7 @@ export default function HomePage() {
         <header className="mb-8">
           <p className="text-sm uppercase tracking-[0.2em] text-sky-700">Weekly Report</p>
           <h1 className="text-3xl font-bold tracking-tight text-slate-900">
-            研究室・週報 PDF ジェネレーター
+            研究室 週報作成Webアプリ
           </h1>
           <p className="mt-2 text-sm text-slate-600">
             日付を選ぶと前週・今週の週範囲を自動計算します。入力完了後に PDF を出力してください。

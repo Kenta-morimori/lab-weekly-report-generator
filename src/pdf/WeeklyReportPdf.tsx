@@ -144,7 +144,10 @@ export function WeeklyReportPdf({ data }: Props) {
             <View style={styles.labelRow}>
               <Text style={styles.bold}>前週の研究達成目標</Text>
               <Text>：</Text>
-              <Text>{prevGoal}</Text>
+              <Text>
+                {"\n"}
+                {prevGoal}
+              </Text>
             </View>
           </View>
           <View>
