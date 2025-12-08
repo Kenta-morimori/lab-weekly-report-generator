@@ -266,11 +266,11 @@ function columnStyle(idx: number) {
   // widths roughly aligned to template
   switch (idx) {
     case 0:
-      return { width: 28 };
+      return { width: 30 };
     case 1:
-      return { width: 20, textAlign: "center" as const };
+      return { width: 28, textAlign: "center" as const };
     case 2:
-      return { width: 105 };
+      return { width: 80 };
     case 3:
       return { width: 28, textAlign: "center" as const };
     default:
