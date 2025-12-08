@@ -13,10 +13,14 @@ const daySchema = z.object({
   date: z.string().min(1, "date is required"),
   stayStart: z.string(),
   stayEnd: z.string(),
+  breakStart: z.string(),
+  breakEnd: z.string(),
   breakMinutes: z.number().int().nonnegative(),
   minutes: z.number().int().nonnegative(),
   content: z.string().max(200, "content must be <= 200 chars"),
 });
+
+const shortText = z.string().max(30, "text must be <= 30 chars");
 
 const weeklyReportSchema = z.object({
   yearLabel: z.string().min(1, "yearLabel is required"),
@@ -28,12 +32,12 @@ const weeklyReportSchema = z.object({
   currentWeekDays: z.array(daySchema).length(7, "currentWeekDays must have 7 entries"),
   totalPrevMinutes: z.number().int().nonnegative(),
   totalPrevHoursRounded: z.number().int().nonnegative(),
-  prevGoal: z.string().max(200, "prevGoal must be <= 200 chars"),
-  prevGoalResult: z.string().max(200, "prevGoalResult must be <= 200 chars"),
-  achievedPoints: z.string().max(200, "achievedPoints must be <= 200 chars"),
-  issues: z.string().max(200, "issues must be <= 200 chars"),
-  currentGoal: z.string().max(200, "currentGoal must be <= 200 chars"),
-  notes: z.string().max(200, "notes must be <= 200 chars"),
+  prevGoal: shortText,
+  prevGoalResultPercent: z.number().int().min(0).max(100),
+  achievedPoints: shortText,
+  issues: shortText,
+  currentGoal: shortText,
+  notes: shortText,
 });
 
 export async function POST(req: NextRequest) {
@@ -51,15 +55,22 @@ export async function POST(req: NextRequest) {
   const doc = <WeeklyReportPdf data={data} />;
 
   const pdfBuffer = await pdf(doc).toBuffer();
-  const pdfBody = normalizePdfOutput(pdfBuffer);
+  const arrayBuffer = await toArrayBuffer(pdfBuffer);
+  const byteLength = arrayBuffer.byteLength;
+
+  if (byteLength <= 0) {
+    console.error("PDF generation returned empty buffer");
+    return new Response("Failed to generate PDF (empty output)", { status: 500 });
+  }
 
   const safeName = sanitizeNameForFilename(data.name.trim()) || "noname";
   const filename = `週報_${safeName}_${data.submissionDate}.pdf`;
 
-  return new Response(pdfBody, {
+  return new Response(arrayBuffer, {
     status: 200,
     headers: {
       "Content-Type": "application/pdf",
+      "Content-Length": String(byteLength),
       "Content-Disposition": `attachment; filename="${encodeURIComponent(
         filename,
       )}"`,
@@ -67,7 +78,10 @@ export async function POST(req: NextRequest) {
   });
 }
 
-function normalizePdfOutput(value: unknown): BodyInit {
+export function normalizePdfOutput(value: unknown): BodyInit {
+  if (value === null || value === undefined) {
+    throw new TypeError("Unexpected value type for PDF output");
+  }
   if (value instanceof ReadableStream) return value;
   if (typeof Blob !== "undefined" && value instanceof Blob) return value;
   if (value instanceof ArrayBuffer) return value;
@@ -82,10 +96,41 @@ function normalizePdfOutput(value: unknown): BodyInit {
     return copyToArrayBuffer(value as ArrayBufferView);
   }
 
+  if (typeof Buffer !== "undefined" && Buffer.isBuffer(value)) {
+    return copyToArrayBuffer(value as Buffer);
+  }
+
   if (typeof value === "object" && value !== null && "byteLength" in (value as ArrayBufferLike)) {
     const view = new Uint8Array(value as ArrayBufferLike);
     return copyToArrayBuffer(view);
   }
 
-  throw new TypeError("Unexpected value type for PDF output");
+  try {
+    const view = new Uint8Array(value as ArrayBufferLike);
+    return copyToArrayBuffer(view);
+  } catch {
+    throw new TypeError("Unexpected value type for PDF output");
+  }
+}
+
+async function toArrayBuffer(value: unknown): Promise<ArrayBuffer> {
+  if (value instanceof ArrayBuffer) return value;
+  if (ArrayBuffer.isView(value)) {
+    const view = value as ArrayBufferView;
+    const clone = new Uint8Array(view.byteLength);
+    clone.set(new Uint8Array(view.buffer, view.byteOffset, view.byteLength));
+    return clone.buffer;
+  }
+  if (value instanceof ReadableStream || (typeof Blob !== "undefined" && value instanceof Blob)) {
+    const resp = new Response(value as BodyInit);
+    return resp.arrayBuffer();
+  }
+  if (typeof Buffer !== "undefined" && Buffer.isBuffer(value)) {
+    const clone = new Uint8Array(value.byteLength);
+    clone.set(value);
+    return clone.buffer;
+  }
+  // Fallback to Response conversion; may throw which will bubble as 500
+  const resp = new Response(value as BodyInit);
+  return resp.arrayBuffer();
 }
