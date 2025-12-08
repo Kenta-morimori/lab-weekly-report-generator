@@ -254,6 +254,36 @@ export default function HomePage() {
     }
   };
 
+  const fillSample = () => {
+    const samplePrev = weekInfo.prevWeekDays.map((d, idx) => ({
+      date: d.label,
+      stayStart: "10:00",
+      stayEnd: "20:00",
+      breakStart: idx === 0 ? "11:00" : "",
+      breakEnd: idx === 0 ? "13:00" : "",
+      content: idx === 0 ? "論文読みと実験計画" : "",
+    }));
+    const sampleCurrent = weekInfo.currentWeekDays.map((d, idx) => ({
+      date: d.label,
+      stayStart: "10:00",
+      stayEnd: "18:00",
+      breakStart: idx === 0 ? "14:00" : "",
+      breakEnd: idx === 0 ? "15:00" : "",
+      content: idx === 0 ? "ミーティング・実装" : "",
+    }));
+
+    setValue("name", "テスト太郎");
+    setValue("yearLabel", deriveFiscalYearLabel());
+    setValue("prevGoal", "前週の目標サンプル");
+    setValue("prevGoalResultPercent", 70);
+    setValue("achievedPoints", "達成点サンプル");
+    setValue("issues", "課題サンプル");
+    setValue("currentGoal", "今週の目標サンプル");
+    setValue("notes", "備考サンプル");
+    replacePrev(samplePrev.map((d) => ({ ...createDayValue(d.date), ...d })));
+    replaceCurrent(sampleCurrent.map((d) => ({ ...createDayValue(d.date), ...d })));
+  };
+
   return (
     <main className="min-h-screen bg-gradient-to-br from-slate-50 via-sky-50 to-emerald-50 text-slate-800">
       <div className="mx-auto max-w-6xl px-4 py-10">
@@ -390,6 +420,13 @@ export default function HomePage() {
               className="inline-flex items-center gap-2 rounded-full bg-sky-700 px-5 py-2 text-sm font-semibold text-white shadow-lg shadow-sky-200 transition hover:-translate-y-0.5 hover:bg-sky-800 focus:outline-none focus:ring-2 focus:ring-sky-200 disabled:translate-y-0 disabled:bg-slate-400 disabled:shadow-none"
             >
               {isSubmitting ? "生成中..." : "PDF 出力"}
+            </button>
+            <button
+              type="button"
+              onClick={fillSample}
+              className="inline-flex items-center gap-2 rounded-full border border-sky-200 px-4 py-2 text-sm font-semibold text-sky-700 shadow-sm transition hover:-translate-y-0.5 hover:bg-sky-50 focus:outline-none focus:ring-2 focus:ring-sky-200"
+            >
+              テストデータ自動入力
             </button>
           </div>
 

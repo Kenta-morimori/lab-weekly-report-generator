@@ -48,7 +48,7 @@ const styles = StyleSheet.create({
   gridRow: {
     flexDirection: "row",
     gap: 18,
-    minHeight: 660,
+    minHeight: 680,
   },
   column: {
     flex: 1,
@@ -241,17 +241,16 @@ function Table({ rows, headers }: TableProps) {
       {rows.map((row) => {
         const weekday = extractWeekday(row.date);
         const dateText = toDateText(row.date); // 月/日 を表示
-        const timeText = row.stayStart && row.stayEnd ? `${row.stayStart}〜${row.stayEnd}` : "―";
-        const minutesText = row.minutes ? `${row.minutes} 分` : "";
+        const timeText = formatStayRange(row);
+        const hoursText = row.minutes ? `${(row.minutes / 60).toFixed(1)}` : "";
         return (
           <View key={row.date} style={styles.tableRow}>
             <Text style={[styles.cell, columnStyle(0)]}>{dateText}</Text>
             <Text style={[styles.cell, columnStyle(1)]}>{weekday}</Text>
             <Text style={[styles.cell, columnStyle(2)]}>
               {timeText}
-              {row.breakStart && row.breakEnd ? `（休憩 ${row.breakStart}〜${row.breakEnd}）` : ""}
             </Text>
-            <Text style={[styles.cell, columnStyle(3)]}>{minutesText}</Text>
+            <Text style={[styles.cell, columnStyle(3)]}>{hoursText}</Text>
             <Text style={[styles.cell, columnStyle(4)]}>{row.content}</Text>
           </View>
         );
@@ -264,13 +263,13 @@ function columnStyle(idx: number) {
   // widths roughly aligned to template
   switch (idx) {
     case 0:
-      return { width: 45 };
+      return { width: 35 };
     case 1:
-      return { width: 25, textAlign: "center" as const };
+      return { width: 22, textAlign: "center" as const };
     case 2:
-      return { width: 120 };
+      return { width: 140 };
     case 3:
-      return { width: 45, textAlign: "center" as const };
+      return { width: 35, textAlign: "center" as const };
     default:
       return { flex: 1 };
   }
@@ -296,4 +295,15 @@ function toDateText(dateLabel: string): string {
 function parseIsoDate(value: string): Date | null {
   const date = new Date(value);
   return Number.isNaN(date.getTime()) ? null : date;
+}
+
+function formatStayRange(row: WeeklyReportPayload["prevWeekDays"][number]): string {
+  const { stayStart, stayEnd, breakStart, breakEnd } = row;
+  if (stayStart && stayEnd && breakStart && breakEnd) {
+    return `${stayStart}〜${breakStart}\n${breakEnd}〜${stayEnd}`;
+  }
+  if (stayStart && stayEnd) {
+    return `${stayStart}〜${stayEnd}`;
+  }
+  return "";
 }
