@@ -54,7 +54,9 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   sectionBox: {
-    borderWidth: 1,
+    borderWidth: 0,
+    borderColor: "#000",
+    borderStyle: "solid",
     padding: 6,
     marginBottom: 12,
     flex: 1,
@@ -64,35 +66,35 @@ const styles = StyleSheet.create({
     marginBottom: 6,
     fontSize: 11,
   },
-  table: {
-    borderWidth: 1,
-    borderRightWidth: 0.5,
-    borderLeftWidth: 1,
-  },
+  table: {},
   tableHeaderRow: {
     flexDirection: "row",
-    borderBottomWidth: 0.5,
     backgroundColor: "#f5f5f5",
   },
   tableHeaderCell: {
-    borderRightWidth: 0.5,
+    borderWidth: 0.5,
+    borderColor: "#000",
+    borderStyle: "solid",
     paddingVertical: 5,
     paddingHorizontal: 5,
     textAlign: "center",
     fontWeight: "bold",
-    fontSize: 10,
+    fontSize: 9,
+    lineHeight: 1.15,
   },
   tableRow: {
     flexDirection: "row",
-    borderBottomWidth: 0.5,
     minHeight: 40,
   },
   cell: {
-    borderRightWidth: 0.5,
+    borderWidth: 0.5,
+    borderColor: "#000",
+    borderStyle: "solid",
     paddingVertical: 5,
     paddingHorizontal: 5,
     fontSize: 10,
     lineHeight: 1.3,
+    justifyContent: "center",
   },
   footerList: {
     marginTop: 8,
@@ -261,7 +263,9 @@ function Table({ rows, headers }: TableProps) {
               {timeText}
             </Text>
             <Text style={[styles.cell, columnStyle(3)]}>{hoursText}</Text>
-            <Text style={[styles.cell, columnStyle(4), { fontSize: 9 }]}>{row.content}</Text>
+            <Text style={[styles.cell, columnStyle(4), { fontSize: 8.5, lineHeight: 1.25 }]}>
+              {row.content}
+            </Text>
           </View>
         );
       })}
