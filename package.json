@@ -10,6 +10,7 @@
     "test:pdf": "tsx tests/pdf-normalize.test.tsx"
   },
   "dependencies": {
+    "@fontsource/noto-sans-jp": "^5.2.8",
     "@react-pdf/renderer": "^4.3.1",
     "date-fns": "^4.1.0",
     "next": "16.0.7",
