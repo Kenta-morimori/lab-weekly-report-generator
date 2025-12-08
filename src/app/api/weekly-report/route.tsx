@@ -51,11 +51,12 @@ export async function POST(req: NextRequest) {
   const doc = <WeeklyReportPdf data={data} />;
 
   const pdfBuffer = await pdf(doc).toBuffer();
+  const pdfBody = normalizePdfOutput(pdfBuffer);
 
   const safeName = sanitizeNameForFilename(data.name.trim()) || "noname";
   const filename = `週報_${safeName}_${data.submissionDate}.pdf`;
 
-  return new Response(pdfBuffer, {
+  return new Response(pdfBody, {
     status: 200,
     headers: {
       "Content-Type": "application/pdf",
@@ -64,4 +65,27 @@ export async function POST(req: NextRequest) {
       )}"`,
     },
   });
+}
+
+function normalizePdfOutput(value: unknown): BodyInit {
+  if (value instanceof ReadableStream) return value;
+  if (typeof Blob !== "undefined" && value instanceof Blob) return value;
+  if (value instanceof ArrayBuffer) return value;
+
+  const copyToArrayBuffer = (view: ArrayBufferView) => {
+    const clone = new Uint8Array(view.byteLength);
+    clone.set(new Uint8Array(view.buffer, view.byteOffset, view.byteLength));
+    return clone.buffer;
+  };
+
+  if (ArrayBuffer.isView(value)) {
+    return copyToArrayBuffer(value as ArrayBufferView);
+  }
+
+  if (typeof value === "object" && value !== null && "byteLength" in (value as ArrayBufferLike)) {
+    const view = new Uint8Array(value as ArrayBufferLike);
+    return copyToArrayBuffer(view);
+  }
+
+  throw new TypeError("Unexpected value type for PDF output");
 }
