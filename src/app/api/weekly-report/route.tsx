@@ -82,6 +82,10 @@ function normalizePdfOutput(value: unknown): BodyInit {
     return copyToArrayBuffer(value as ArrayBufferView);
   }
 
-  const view = new Uint8Array(value as ArrayBufferLike);
-  return copyToArrayBuffer(view);
+  if (typeof value === "object" && value !== null && "byteLength" in (value as ArrayBufferLike)) {
+    const view = new Uint8Array(value as ArrayBufferLike);
+    return copyToArrayBuffer(view);
+  }
+
+  throw new TypeError("Unexpected value type for PDF output");
 }

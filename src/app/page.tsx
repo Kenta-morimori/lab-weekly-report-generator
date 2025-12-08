@@ -415,7 +415,7 @@ function DayTable<T extends "prevWeekDays" | "currentWeekDays">({
               className="grid grid-cols-[150px,110px,110px,110px,1fr,120px] items-start gap-2 px-4 py-2 text-xs"
             >
               <div className="flex h-full items-center rounded-lg bg-slate-50 px-2 font-semibold text-slate-800">
-                {day?.date ?? ""}
+                {day?.date ?? "N/A"}
               </div>
               <input
                 type="time"
