@@ -48,13 +48,16 @@ const styles = StyleSheet.create({
     gap: 6,
     marginBottom: 4,
   },
+  indentText: {
+    marginLeft: 16,
+    marginBottom: 4,
+  },
   bold: {
     fontWeight: "bold",
   },
   gridRow: {
     flexDirection: "row",
     gap: 18,
-    minHeight: 680,
   },
   column: {
     flex: 1,
@@ -144,11 +147,8 @@ export function WeeklyReportPdf({ data }: Props) {
             <View style={styles.labelRow}>
               <Text style={styles.bold}>前週の研究達成目標</Text>
               <Text>：</Text>
-              <Text>
-                {"\n"}
-                {prevGoal}
-              </Text>
             </View>
+            <Text style={styles.indentText}>{prevGoal}</Text>
           </View>
           <View>
             <View style={styles.labelRow}>
