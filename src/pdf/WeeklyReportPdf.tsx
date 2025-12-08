@@ -8,11 +8,11 @@ Font.register({
   family: "MPlus1pJP",
   fonts: [
     {
-      src: pathToFont("noto-sans-jp-0-400-normal.woff2"),
+      src: path.join(process.cwd(), "node_modules/noto-sans-cjk-jp/fonts/NotoSansCJKjp-Regular.woff"),
       fontWeight: "normal",
     },
     {
-      src: pathToFont("noto-sans-jp-0-700-normal.woff2"),
+      src: path.join(process.cwd(), "node_modules/noto-sans-cjk-jp/fonts/NotoSansCJKjp-Bold.woff"),
       fontWeight: "bold",
     },
   ],
@@ -20,22 +20,22 @@ Font.register({
 
 const styles = StyleSheet.create({
   page: {
-    paddingTop: 32,
-    paddingBottom: 32,
-    paddingHorizontal: 30,
+    paddingTop: 36,
+    paddingBottom: 24,
+    paddingHorizontal: 32,
     fontFamily: "MPlus1pJP",
-    fontSize: 10,
-    lineHeight: 1.4,
+    fontSize: 10.5,
+    lineHeight: 1.35,
   },
   title: {
     fontSize: 16,
     textAlign: "center",
-    marginBottom: 12,
+    marginBottom: 16,
   },
   topRow: {
     flexDirection: "row",
     justifyContent: "space-between",
-    marginBottom: 12,
+    marginBottom: 14,
   },
   labelRow: {
     flexDirection: "row",
@@ -47,7 +47,7 @@ const styles = StyleSheet.create({
   },
   gridRow: {
     flexDirection: "row",
-    gap: 12,
+    gap: 18,
   },
   column: {
     flex: 1,
@@ -55,11 +55,11 @@ const styles = StyleSheet.create({
   sectionBox: {
     borderWidth: 1,
     padding: 6,
-    marginBottom: 10,
+    marginBottom: 12,
   },
   sectionTitle: {
     fontWeight: "bold",
-    marginBottom: 4,
+    marginBottom: 6,
   },
   table: {
     borderWidth: 1,
@@ -73,25 +73,27 @@ const styles = StyleSheet.create({
   },
   tableHeaderCell: {
     borderRightWidth: 0.5,
-    paddingVertical: 4,
-    paddingHorizontal: 4,
+    paddingVertical: 5,
+    paddingHorizontal: 5,
     textAlign: "center",
     fontWeight: "bold",
-    fontSize: 9,
+    fontSize: 10,
   },
   tableRow: {
     flexDirection: "row",
     borderBottomWidth: 0.5,
-    minHeight: 28,
+    minHeight: 34,
   },
   cell: {
     borderRightWidth: 0.5,
-    padding: 4,
-    fontSize: 9,
+    paddingVertical: 5,
+    paddingHorizontal: 5,
+    fontSize: 10,
+    lineHeight: 1.3,
   },
   footerList: {
     marginTop: 8,
-    gap: 4,
+    gap: 6,
   },
   footerLabel: { fontWeight: "bold" },
 });
@@ -224,9 +226,9 @@ function Table({ rows, headers }: TableProps) {
       </View>
       {rows.map((row) => {
         const weekday = extractWeekday(row.date);
-        const dateText = toDateText(row.date);
+        const dateText = ""; // 西暦表示は不要なため空欄
         const timeText = row.stayStart && row.stayEnd ? `${row.stayStart}〜${row.stayEnd}` : "―";
-        const minutesText = row.minutes ? `${row.minutes} 分` : "0 分";
+        const minutesText = row.minutes ? `${row.minutes} 分` : "";
         return (
           <View key={row.date} style={styles.tableRow}>
             <Text style={[styles.cell, columnStyle(0)]}>{dateText}</Text>
@@ -248,13 +250,13 @@ function columnStyle(idx: number) {
   // widths roughly aligned to template
   switch (idx) {
     case 0:
-      return { width: 70 };
+      return { width: 45 };
     case 1:
-      return { width: 30, textAlign: "center" as const };
+      return { width: 25, textAlign: "center" as const };
     case 2:
-      return { width: 110 };
+      return { width: 120 };
     case 3:
-      return { width: 40, textAlign: "right" as const };
+      return { width: 45, textAlign: "center" as const };
     default:
       return { flex: 1 };
   }
@@ -267,22 +269,7 @@ function extractWeekday(dateLabel: string): string {
   return date ? ["日", "月", "火", "水", "木", "金", "土"][date.getDay()] : "";
 }
 
-function toDateText(dateLabel: string): string {
-  const iso = dateLabel.split(" ")[0];
-  if (!iso) return dateLabel;
-  const date = parseIsoDate(iso);
-  if (!date) return iso;
-  const y = date.getFullYear();
-  const m = String(date.getMonth() + 1).padStart(2, "0");
-  const d = String(date.getDate()).padStart(2, "0");
-  return `${y}/${m}/${d}`;
-}
-
 function parseIsoDate(value: string): Date | null {
   const date = new Date(value);
   return Number.isNaN(date.getTime()) ? null : date;
-}
-
-function pathToFont(filename: string) {
-  return path.join(process.cwd(), "node_modules/@fontsource/noto-sans-jp/files", filename);
 }
