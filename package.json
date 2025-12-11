@@ -14,6 +14,7 @@
     "@fontsource/noto-sans-jp": "^5.2.8",
     "@react-pdf/renderer": "^4.3.1",
     "date-fns": "^4.1.0",
+    "googleapis": "^168.0.0",
     "next": "16.0.7",
     "noto-sans-cjk-jp": "^1.0.1",
     "pdf-lib": "^1.17.1",
