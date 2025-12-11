@@ -6,6 +6,7 @@ import { z } from "zod";
 import { WeeklyReportPdf } from "@/pdf/WeeklyReportPdf";
 import { sanitizeNameForFilename } from "@/lib/weeklyReport";
 import type { WeeklyReportPayload } from "@/types/weeklyReport";
+import { PDFDocument } from "pdf-lib";
 
 export const runtime = "nodejs"; // React-PDF を使うので Node ランタイム
 
@@ -56,7 +57,8 @@ export async function POST(req: NextRequest) {
   const doc = <WeeklyReportPdf data={data} />;
 
   const pdfBuffer = await pdf(doc).toBuffer();
-  const arrayBuffer = await toArrayBuffer(pdfBuffer);
+  const trimmedPdfBuffer = await trimToSinglePage(pdfBuffer);
+  const arrayBuffer = await toArrayBuffer(trimmedPdfBuffer);
   const byteLength = arrayBuffer.byteLength;
 
   if (byteLength <= 0) {
@@ -111,6 +113,24 @@ export function normalizePdfOutput(value: unknown): BodyInit {
     return copyToArrayBuffer(view);
   } catch {
     throw new TypeError("Unexpected value type for PDF output");
+  }
+}
+
+async function trimToSinglePage(
+  pdfInput: ArrayBuffer | Buffer | Uint8Array,
+): Promise<ArrayBuffer | Buffer | Uint8Array> {
+  try {
+    const original = await PDFDocument.load(pdfInput);
+    if (original.getPageCount() <= 1) return pdfInput;
+
+    const trimmed = await PDFDocument.create();
+    const [firstPage] = await trimmed.copyPages(original, [0]);
+    trimmed.addPage(firstPage);
+    const output = await trimmed.save();
+    return output;
+  } catch (err) {
+    console.error("Failed to trim PDF pages, returning original buffer", err);
+    return pdfInput;
   }
 }
 
