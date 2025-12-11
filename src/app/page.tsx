@@ -52,7 +52,7 @@ type DerivedDay = {
 };
 
 const TEXT_LIMIT = 30;
-const DAY_CONTENT_LIMIT = 200;
+const DAY_CONTENT_LIMIT = 20;
 const ERROR_PREFIX = "入力エラー:";
 
 const repeatToLength = (seed: string, limit: number) =>
@@ -62,13 +62,12 @@ const baseShortText = repeatToLength(
   "数値目標や達成度を端的に示すテスト用文面。",
   TEXT_LIMIT,
 );
-const baseDayContent = repeatToLength(
-  "研究の背景・目的・手法・結果・考察・次のアクションを詳細に書き連ね、文字数上限でもPDF生成できるかを確認するためのテスト用コンテンツ。",
-  DAY_CONTENT_LIMIT,
-);
+const baseDayContentSeed = "研究概要と予定を簡潔に記述";
+const baseDayContent = repeatToLength(baseDayContentSeed, DAY_CONTENT_LIMIT);
 
 const buildShortText = (prefix: string) => `${prefix} ${baseShortText}`.slice(0, TEXT_LIMIT);
-const buildDayContent = (prefix: string) => `${prefix} ${baseDayContent}`.slice(0, DAY_CONTENT_LIMIT);
+const buildDayContent = (prefix: string) =>
+  repeatToLength(`${prefix} ${baseDayContentSeed}`, DAY_CONTENT_LIMIT);
 
 function parseTime(value: string): number | null {
   if (!value) return null;
@@ -287,7 +286,7 @@ export default function HomePage() {
       stayEnd: "19:00",
       breakStart: "12:00",
       breakEnd: "13:00",
-      content: buildDayContent(`前週${idx + 1}日目の詳細な研究記録。`),
+      content: buildDayContent(`前週${idx + 1}日目`),
     }));
     const sampleCurrent = weekInfo.currentWeekDays.map((d, idx) => ({
       date: d.label,
@@ -295,7 +294,7 @@ export default function HomePage() {
       stayEnd: "18:30",
       breakStart: "12:30",
       breakEnd: "13:15",
-      content: buildDayContent(`今週${idx + 1}日目の行動予定。`),
+      content: buildDayContent(`今週${idx + 1}日目`),
     }));
 
     setValue("name", "テスト太郎");
@@ -561,7 +560,7 @@ function DayTable<T extends "prevWeekDays" | "currentWeekDays">({
                   maxLength={DAY_CONTENT_LIMIT}
                   rows={2}
                   className="w-full rounded-lg border border-slate-200 bg-white px-2 py-1 text-xs shadow-inner focus:border-sky-400 focus:outline-none focus:ring-2 focus:ring-sky-100"
-                  placeholder="研究内容・行動を入力"
+                  placeholder={`${DAY_CONTENT_LIMIT}文字以内で入力してください`}
                 />
               </InlineField>
 

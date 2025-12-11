@@ -14,12 +14,9 @@ const repeatToLength = (seed: string, length: number) =>
   seed.repeat(Math.ceil(length / seed.length)).slice(0, length);
 
 const maxShortText = repeatToLength("文字数上限テスト用の短文。", 30);
-const maxContent = repeatToLength(
-  "詳細な研究内容や予定をびっしり書き込んで、PDF生成時の文字数上限を検証するための文章。",
-  200,
-);
+const maxContent = repeatToLength("研究概要を簡潔に記載", 20);
 
-const buildContent = (prefix: string) => `${prefix} ${maxContent}`.slice(0, 200);
+const buildContent = (prefix: string) => repeatToLength(`${prefix} 研究概要`, 20);
 
 test("normalizePdfOutput converts ArrayBufferView into BodyInit", () => {
   const body = normalizePdfOutput(new Uint8Array([1, 2, 3]));
@@ -34,7 +31,7 @@ test("normalizePdfOutput throws on unexpected value", () => {
 test("PDF generation produces a downloadable body", async () => {
   const weekInfo = computeWeeksFromReference("2025-04-07");
   assert.equal(maxShortText.length, 30);
-  assert.equal(buildContent("prefix").length, 200);
+  assert.equal(buildContent("prefix").length, 20);
 
   const makeDay = (label: string, idx: number): DayRecord => {
     const breakStart = "12:00";
@@ -50,7 +47,7 @@ test("PDF generation produces a downloadable body", async () => {
       breakEnd,
       breakMinutes,
       minutes: calculateStayMinutes(stayStart, stayEnd, breakStart, breakEnd),
-      content: buildContent(`日${idx + 1}の詳細な研究記録。`),
+      content: buildContent(`日${idx + 1}`),
     };
   };
 

@@ -17,7 +17,7 @@ const daySchema = z.object({
   breakEnd: z.string(),
   breakMinutes: z.number().int().nonnegative(),
   minutes: z.number().int().nonnegative(),
-  content: z.string().max(200, "content must be <= 200 chars"),
+  content: z.string().max(20, "content must be <= 20 chars"),
 });
 
 const shortText = z.string().max(30, "text must be <= 30 chars");
