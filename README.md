@@ -45,13 +45,6 @@ npm run ci:local
 
 This runs lint -> PDF test -> production build.
 
-## Backend integrations (Google Drive / Sheets)
+## Backend integrations
 
-Set the following environment variables for server-side storage of PDFs and回答データ:
-
-- `GOOGLE_DRIVE_FOLDER_ID`: DriveフォルダID（PDF保存用）
-- `GOOGLE_SHEETS_ID`: 回答を追記するスプレッドシートID
-- `GOOGLE_SERVICE_ACCOUNT_EMAIL`: サービスアカウントのメール
-- `GOOGLE_SERVICE_ACCOUNT_KEY`: サービスアカウント秘密鍵（`\n`は改行に置換されます）
-
-これらが未設定の場合、Drive/Sheetsへの保存はスキップされ、ユーザー向けのPDFダウンロード動作のみ行われます。
+現在、外部ストレージ（Google Drive / Sheets）連携は行っていません。必要に応じて別途実装してください。
