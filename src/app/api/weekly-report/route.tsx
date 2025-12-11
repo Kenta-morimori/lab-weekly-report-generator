@@ -44,6 +44,12 @@ const weeklyReportSchema = z.object({
 });
 
 export async function POST(req: NextRequest) {
+  const debugMode = req.nextUrl.searchParams.get("debug") === "true";
+  const persistLogs: { message: string; extra?: unknown }[] = [];
+  const debugLogger = (message: string, extra?: unknown) => {
+    persistLogs.push({ message, extra });
+  };
+
   const body = (await req.json()) as WeeklyReportPayload;
 
   const parsed = weeklyReportSchema.safeParse(body);
@@ -62,7 +68,7 @@ export async function POST(req: NextRequest) {
   const byteLength = trimmedPdfBuffer.byteLength;
 
   try {
-    await persistWeeklyReportToDriveAndSheet(parsed.data, trimmedPdfBuffer);
+    await persistWeeklyReportToDriveAndSheet(parsed.data, trimmedPdfBuffer, debugMode ? { debugLogger } : undefined);
   } catch (err) {
     console.error("Failed to persist weekly report to Drive/Sheets", err);
   }
@@ -83,6 +89,9 @@ export async function POST(req: NextRequest) {
       "Content-Disposition": `attachment; filename="${encodeURIComponent(
         filename,
       )}"`,
+      ...(debugMode && persistLogs.length > 0
+        ? { "X-Persist-Logs": encodeURIComponent(JSON.stringify(persistLogs)) }
+        : {}),
     },
   });
 }

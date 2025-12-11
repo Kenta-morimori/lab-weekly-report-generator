@@ -147,6 +147,8 @@ export default function HomePage() {
   const [weekInfo, setWeekInfo] = useState(initialWeekInfo);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [showPersistLogs, setShowPersistLogs] = useState(false);
+  const [persistLogs, setPersistLogs] = useState<{ message: string; extra?: unknown }[]>([]);
 
   const {
     control,
@@ -207,6 +209,7 @@ export default function HomePage() {
 
   const onSubmit = async (values: FormValues) => {
     setError(null);
+    setPersistLogs([]);
     if (!values.name.trim()) {
       setError("氏名は必須です。");
       return;
@@ -252,7 +255,8 @@ export default function HomePage() {
     setIsSubmitting(true);
 
     try {
-      const res = await fetch("/api/weekly-report", {
+      const query = showPersistLogs ? "?debug=true" : "";
+      const res = await fetch(`/api/weekly-report${query}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
@@ -272,6 +276,15 @@ export default function HomePage() {
       link.click();
       link.remove();
       window.URL.revokeObjectURL(url);
+
+      const headerLogs = res.headers.get("x-persist-logs");
+      if (headerLogs) {
+        try {
+          setPersistLogs(JSON.parse(decodeURIComponent(headerLogs)));
+        } catch (e) {
+          console.error("ログのパースに失敗しました", e);
+        }
+      }
     } catch (err) {
       console.error(err);
       setError(err instanceof Error ? err.message : "PDF の生成でエラーが発生しました。");
@@ -461,12 +474,35 @@ export default function HomePage() {
             >
               テストデータ自動入力
             </button>
+            <label className="flex items-center gap-2 text-sm text-slate-700">
+              <input
+                type="checkbox"
+                checked={showPersistLogs}
+                onChange={(e) => setShowPersistLogs(e.target.checked)}
+                className="h-4 w-4 rounded border-slate-300 text-sky-700 focus:ring-sky-300"
+              />
+              ログの表示（Drive/Sheets 保存の結果を確認）
+            </label>
           </div>
 
           {!isDirty && (
             <p className="text-xs text-slate-500">
               初期値は本日 {todayIso} を基準にしています。必要に応じて編集してください。
             </p>
+          )}
+
+          {showPersistLogs && persistLogs.length > 0 && (
+            <div className="space-y-2 rounded-lg border border-slate-200 bg-white/90 p-3 text-xs text-slate-700">
+              <p className="font-semibold text-slate-800">バックエンドログ</p>
+              <ul className="space-y-1">
+                {persistLogs.map((log, idx) => (
+                  <li key={idx} className="break-words">
+                    <span className="font-medium">{log.message}</span>
+                    {log.extra ? <pre className="mt-1 whitespace-pre-wrap text-[11px]">{JSON.stringify(log.extra, null, 2)}</pre> : null}
+                  </li>
+                ))}
+              </ul>
+            </div>
           )}
         </form>
       </div>

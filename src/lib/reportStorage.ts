@@ -45,9 +45,12 @@ function logDebug(message: string, extra?: unknown) {
 export async function persistWeeklyReportToDriveAndSheet(
   payload: WeeklyReportPayload,
   pdfBuffer: ArrayBuffer,
+  opts?: { debugLogger?: (message: string, extra?: unknown) => void },
 ): Promise<PersistResult | null> {
+  const debugLog = opts?.debugLogger ?? logDebug;
+
   if (PERSIST_DRY_RUN) {
-    logDebug("[reportStorage] dry-run enabled. Skipping Drive/Sheets write.", {
+    debugLog("[reportStorage] dry-run enabled. Skipping Drive/Sheets write.", {
       name: payload.name,
       submissionDate: payload.submissionDate,
     });
@@ -109,7 +112,7 @@ export async function persistWeeklyReportToDriveAndSheet(
       requestBody: { values: [row] },
     });
 
-    logDebug("[reportStorage] persisted weekly report", {
+    debugLog("[reportStorage] persisted weekly report", {
       name: payload.name,
       submissionDate: payload.submissionDate,
       fileId,
