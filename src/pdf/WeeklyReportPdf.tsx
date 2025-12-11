@@ -76,7 +76,7 @@ const styles = StyleSheet.create({
   },
   tableWrapper: {
     marginTop: 4,
-    marginBottom: 4,
+    marginBottom: 8,
   },
   table: {},
   tableHeaderRow: {
@@ -113,7 +113,7 @@ const styles = StyleSheet.create({
     textAlign: "center",
   },
   footerList: {
-    marginTop: 6,
+    marginTop: 10,
     gap: 4,
   },
   footerLabel: { fontWeight: "bold" },
@@ -312,13 +312,13 @@ function columnStyle(idx: number) {
   // widths roughly aligned to template
   switch (idx) {
     case 0:
-      return { width: 32 };
+      return { width: 30 };
     case 1:
-      return { width: 24, textAlign: "center" as const };
+      return { width: 22, textAlign: "center" as const };
     case 2:
-      return { width: 60 };
+      return { width: 66 };
     case 3:
-      return { width: 24, textAlign: "center" as const };
+      return { width: 22, textAlign: "center" as const };
     default:
       return { flex: 1 };
   }
