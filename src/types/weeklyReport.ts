@@ -26,9 +26,6 @@ export type WeeklyReportPayload = {
   /** 氏名 */
   name: string;
 
-  /** 提出日（自動計算された今週月曜日の日付） "2025-04-14" 形式 */
-  submissionDate: string;
-
   /** 前週の週ラベル "2025/04/07〜2025/04/13" など */
   prevWeekLabel: string;
   /** 今週の週ラベル "2025/04/14〜2025/04/20" など */

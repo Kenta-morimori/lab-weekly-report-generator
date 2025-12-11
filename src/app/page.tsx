@@ -48,11 +48,13 @@ type DerivedDay = {
   breakMinutes: number;
   minutes: number;
   errors: string[];
+  warnings: string[];
 };
 
 const TEXT_LIMIT = 50;
-const DAY_CONTENT_LIMIT = 200;
+const DAY_CONTENT_LIMIT = 50;
 const ERROR_PREFIX = "入力エラー:";
+const WARNING_PREFIX = "注意:";
 
 function parseTime(value: string): number | null {
   if (!value) return null;
@@ -63,6 +65,7 @@ function parseTime(value: string): number | null {
 
 function computeDayDerived(day: DayFormValue): DerivedDay {
   const errors: string[] = [];
+  const warnings: string[] = [];
   const start = parseTime(day.stayStart);
   const end = parseTime(day.stayEnd);
   const breakStart = parseTime(day.breakStart);
@@ -86,13 +89,25 @@ function computeDayDerived(day: DayFormValue): DerivedDay {
     errors.push(`${ERROR_PREFIX} ${day.date} 離席時間は滞在時間内に設定してください`);
   }
 
+  if (start !== null && end === null) {
+    warnings.push(
+      `${WARNING_PREFIX} ${day.date} 終了時刻が未入力のため滞在時間は0分として計算されます`,
+    );
+  }
+
+  if (end !== null && start === null) {
+    warnings.push(
+      `${WARNING_PREFIX} ${day.date} 開始時刻が未入力のため滞在時間は0分として計算されます`,
+    );
+  }
+
   const breakMinutes = calculateBreakMinutes(day.breakStart, day.breakEnd);
   const minutes =
     start !== null && end !== null
       ? Math.max(calculateStayMinutes(day.stayStart, day.stayEnd, day.breakStart, day.breakEnd), 0)
       : 0;
 
-  return { breakMinutes, minutes: errors.length ? 0 : minutes, errors };
+  return { breakMinutes, minutes: errors.length ? 0 : minutes, errors, warnings };
 }
 const todayIso = format(new Date(), "yyyy-MM-dd");
 const initialWeekInfo = computeWeeksFromReference(todayIso);
@@ -217,7 +232,6 @@ export default function HomePage() {
     const payload: WeeklyReportPayload = {
       yearLabel: values.yearLabel.trim() || deriveFiscalYearLabel(),
       name: values.name.trim(),
-      submissionDate: weekInfo.submissionDate,
       prevWeekLabel: weekInfo.prevWeekLabel,
       currentWeekLabel: weekInfo.currentWeekLabel,
       prevWeekDays: values.prevWeekDays.map((day, idx) => mapDay(day, prevComputedDays[idx])),
@@ -249,8 +263,9 @@ export default function HomePage() {
       const url = window.URL.createObjectURL(blob);
       const link = document.createElement("a");
       const safeName = sanitizeNameForFilename(payload.name) || "noname";
+      const weekStartIso = weekInfo.currentWeekDays[0]?.iso ?? "unknown-date";
       link.href = url;
-      link.download = `週報_${safeName}_${payload.submissionDate}.pdf`;
+      link.download = `週報_${safeName}_${weekStartIso}.pdf`;
       document.body.appendChild(link);
       link.click();
       link.remove();
@@ -491,11 +506,12 @@ function DayTable<T extends "prevWeekDays" | "currentWeekDays">({
           const minutes = derived?.minutes ?? 0;
           const breakMinutes = derived?.breakMinutes ?? 0;
           const hasError = (derived?.errors?.length ?? 0) > 0;
+          const hasWarning = (derived?.warnings?.length ?? 0) > 0;
           return (
             <div
               key={field.id}
               className={`flex flex-col gap-2 px-4 py-3 text-xs ${
-                hasError ? "bg-rose-50" : ""
+                hasError ? "bg-rose-50" : hasWarning ? "bg-amber-50" : ""
               }`}
             >
               <div className="flex flex-wrap items-center justify-between gap-2">
@@ -551,6 +567,14 @@ function DayTable<T extends "prevWeekDays" | "currentWeekDays">({
               {hasError ? (
                 <ul className="list-disc pl-5 text-[11px] text-rose-700">
                   {derived.errors.map((msg) => (
+                    <li key={msg}>{msg}</li>
+                  ))}
+                </ul>
+              ) : null}
+
+              {!hasError && hasWarning ? (
+                <ul className="list-disc pl-5 text-[11px] text-amber-700">
+                  {derived.warnings.map((msg) => (
                     <li key={msg}>{msg}</li>
                   ))}
                 </ul>
@@ -664,7 +688,7 @@ function TextAreaField({ label, count, ...rest }: TextAreaFieldProps) {
         rows={3}
         maxLength={TEXT_LIMIT}
         className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm shadow-inner focus:border-sky-400 focus:outline-none focus:ring-2 focus:ring-sky-100"
-        placeholder="30文字以内で入力してください"
+        placeholder="50文字以内で入力してください"
       />
     </label>
   );

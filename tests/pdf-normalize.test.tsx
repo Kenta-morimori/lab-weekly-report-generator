@@ -43,7 +43,6 @@ test("PDF generation produces a downloadable body", async () => {
   const payload: WeeklyReportPayload = {
     yearLabel: "2025",
     name: "テスト太郎",
-    submissionDate: weekInfo.submissionDate,
     prevWeekLabel: weekInfo.prevWeekLabel,
     currentWeekLabel: weekInfo.currentWeekLabel,
     prevWeekDays: weekInfo.prevWeekDays.map((d) => makeDay(d.label)),

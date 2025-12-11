@@ -17,15 +17,14 @@ const daySchema = z.object({
   breakEnd: z.string(),
   breakMinutes: z.number().int().nonnegative(),
   minutes: z.number().int().nonnegative(),
-  content: z.string().max(200, "content must be <= 200 chars"),
+  content: z.string().max(50, "content must be <= 50 chars"),
 });
 
-const shortText = z.string().max(30, "text must be <= 30 chars");
+const shortText = z.string().max(50, "text must be <= 50 chars");
 
 const weeklyReportSchema = z.object({
   yearLabel: z.string().min(1, "yearLabel is required"),
   name: z.string().min(1, "name is required"),
-  submissionDate: z.string().min(1, "submissionDate is required"),
   prevWeekLabel: z.string().min(1, "prevWeekLabel is required"),
   currentWeekLabel: z.string().min(1, "currentWeekLabel is required"),
   prevWeekDays: z.array(daySchema).length(7, "prevWeekDays must have 7 entries"),
@@ -64,7 +63,8 @@ export async function POST(req: NextRequest) {
   }
 
   const safeName = sanitizeNameForFilename(data.name.trim()) || "noname";
-  const filename = `週報_${safeName}_${data.submissionDate}.pdf`;
+  const weekStartIso = deriveWeekStartIso(data);
+  const filename = `週報_${safeName}_${weekStartIso}.pdf`;
 
   return new Response(arrayBuffer, {
     status: 200,
@@ -133,4 +133,13 @@ async function toArrayBuffer(value: unknown): Promise<ArrayBuffer> {
   // Fallback to Response conversion; may throw which will bubble as 500
   const resp = new Response(value as BodyInit);
   return resp.arrayBuffer();
+}
+
+function deriveWeekStartIso(data: WeeklyReportPayload): string {
+  const [firstDay] = data.currentWeekDays;
+  if (!firstDay?.date) return "unknown-date";
+  const iso = firstDay.date.split(" ")[0];
+  if (!iso) return "unknown-date";
+  const parsed = new Date(iso);
+  return Number.isNaN(parsed.getTime()) ? iso : iso;
 }

@@ -14,8 +14,6 @@ export type WeekComputation = {
   currentWeekLabel: string;
   prevWeekDays: DayTemplate[];
   currentWeekDays: DayTemplate[];
-  /** デフォルトの提出日（今週月曜日） */
-  submissionDate: string;
 };
 
 export function deriveFiscalYearLabel(baseDate = new Date()): string {
@@ -76,7 +74,6 @@ export function computeWeeksFromReference(referenceDate: string): WeekComputatio
     currentWeekLabel,
     prevWeekDays: buildWeekDays(prevWeekStart),
     currentWeekDays: buildWeekDays(currentWeekStart),
-    submissionDate: format(currentWeekStart, "yyyy-MM-dd"),
   };
 }
 
