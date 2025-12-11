@@ -186,7 +186,7 @@ export function WeeklyReportPdf({ data }: Props) {
                   "曜日",
                   "大学滞在\n時間帯",
                   "時間\n(h)",
-                  "研究内容（講義、その他）、\n行動、達成内容",
+                  "研究内容",
                 ]}
               />
               <View style={styles.footerList}>
@@ -218,7 +218,7 @@ export function WeeklyReportPdf({ data }: Props) {
                   "曜日",
                   "大学滞在予定\n時間帯",
                   "時間\n(h)",
-                  "研究内容（講義、その他）、\n行動予定、休日でもよい",
+                  "研究内容",
                 ]}
               />
                 <View style={styles.footerList}>

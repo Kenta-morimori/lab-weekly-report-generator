@@ -285,7 +285,12 @@ export default function HomePage() {
       stayEnd: "20:00",
       breakStart: idx === 0 ? "11:00" : "",
       breakEnd: idx === 0 ? "13:00" : "",
-      content: idx === 0 ? "論文読みと実験計画" : "",
+      content:
+        idx === 0
+          ? "論文読み、実験計画の見直し、発表資料の下書きを作成"
+          : idx === 1
+            ? "装置調整とデータ取得、教員MTGで進捗共有"
+            : "サンプルデータ解析と簡易な結果まとめ",
     }));
     const sampleCurrent = weekInfo.currentWeekDays.map((d, idx) => ({
       date: d.label,
@@ -293,7 +298,12 @@ export default function HomePage() {
       stayEnd: "18:00",
       breakStart: idx === 0 ? "14:00" : "",
       breakEnd: idx === 0 ? "15:00" : "",
-      content: idx === 0 ? "ミーティング・実装" : "",
+      content:
+        idx === 0
+          ? "実験条件の追加検証、夕方にゼミ練習"
+          : idx === 1
+            ? "午前は論文精読、午後に実装方針の整理"
+            : "データ整理と考察草案づくり（休日は休養）",
     }));
 
     setValue("name", "テスト太郎");
@@ -415,6 +425,7 @@ export default function HomePage() {
               derivedDays={prevComputedDays}
               totalMinutes={totalPrevMinutes}
               register={register}
+              contentPlaceholder="研究内容(講義・行動・達成内容)を入力"
             />
             <DayTable
               title="今週（予定）"
@@ -425,6 +436,7 @@ export default function HomePage() {
               derivedDays={currentComputedDays}
               totalMinutes={totalCurrentMinutes}
               register={register}
+              contentPlaceholder="研究内容(講義・行動予定・休日でも良い)を入力"
             />
           </section>
 
@@ -474,6 +486,7 @@ type DayTableProps<T extends "prevWeekDays" | "currentWeekDays"> = {
   derivedDays: DerivedDay[];
   totalMinutes: number;
   register: UseFormRegister<FormValues>;
+  contentPlaceholder: string;
 };
 
 function DayTable<T extends "prevWeekDays" | "currentWeekDays">({
@@ -485,6 +498,7 @@ function DayTable<T extends "prevWeekDays" | "currentWeekDays">({
   derivedDays,
   totalMinutes,
   register,
+  contentPlaceholder,
 }: DayTableProps<T>) {
   return (
     <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white/90 shadow-sm backdrop-blur">
@@ -560,7 +574,7 @@ function DayTable<T extends "prevWeekDays" | "currentWeekDays">({
                   maxLength={DAY_CONTENT_LIMIT}
                   rows={2}
                   className="w-full rounded-lg border border-slate-200 bg-white px-2 py-1 text-xs shadow-inner focus:border-sky-400 focus:outline-none focus:ring-2 focus:ring-sky-100"
-                  placeholder="研究内容・行動を入力"
+                  placeholder={contentPlaceholder}
                 />
               </InlineField>
 
