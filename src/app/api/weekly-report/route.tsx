@@ -115,9 +115,7 @@ export function normalizePdfOutput(value: unknown): BodyInit {
   }
 }
 
-async function trimToSinglePage(
-  pdfInput: unknown,
-): Promise<ArrayBuffer> {
+async function trimToSinglePage(pdfInput: unknown): Promise<ArrayBuffer> {
   try {
     const normalized = await toArrayBuffer(pdfInput);
     const original = await PDFDocument.load(normalized);
@@ -126,7 +124,8 @@ async function trimToSinglePage(
     const trimmed = await PDFDocument.create();
     const [firstPage] = await trimmed.copyPages(original, [0]);
     trimmed.addPage(firstPage);
-    return await trimmed.save(); // Uint8Array (ArrayBuffer under the hood)
+    const output = await trimmed.save();
+    return toArrayBuffer(output);
   } catch (err) {
     console.error("Failed to trim PDF pages, returning original buffer", err);
     return toArrayBuffer(pdfInput);

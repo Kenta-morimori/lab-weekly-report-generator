@@ -15,8 +15,6 @@ const repeatToLength = (seed: string, length: number) =>
 
 const shortText30 = repeatToLength("文字数上限テスト用の短文。", 30);
 const goalText25 = repeatToLength("研究目標を簡潔に書く", 25);
-const maxContent = repeatToLength("研究概要を簡潔に記載", 20);
-
 const buildContent = (prefix: string) => repeatToLength(`${prefix} 研究概要`, 20);
 
 test("normalizePdfOutput converts ArrayBufferView into BodyInit", () => {

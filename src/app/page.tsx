@@ -60,7 +60,6 @@ const repeatToLength = (seed: string, limit: number) =>
   seed.repeat(Math.ceil(limit / seed.length)).slice(0, limit);
 
 const baseDayContentSeed = "研究概要と予定を簡潔に記述";
-const baseDayContent = repeatToLength(baseDayContentSeed, DAY_CONTENT_LIMIT);
 
 const buildShortText = (prefix: string, limit: number) =>
   repeatToLength(`${prefix} 数値目標や達成度を端的に示すテスト用文面。`, limit);
