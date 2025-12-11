@@ -26,53 +26,53 @@ const cellBorder = {
 
 const styles = StyleSheet.create({
   page: {
-    paddingTop: 36,
-    paddingBottom: 24,
-    paddingHorizontal: 32,
+    paddingTop: 26,
+    paddingBottom: 18,
+    paddingHorizontal: 20,
     fontFamily: "MPlus1pJP",
-    fontSize: 10.5,
-    lineHeight: 1.35,
+    fontSize: 9,
+    lineHeight: 1.3,
   },
   title: {
-    fontSize: 16,
+    fontSize: 14,
     textAlign: "center",
-    marginBottom: 16,
+    marginBottom: 10,
   },
   topRow: {
     flexDirection: "row",
     justifyContent: "space-between",
-    marginBottom: 14,
+    marginBottom: 10,
   },
   labelRow: {
     flexDirection: "row",
-    gap: 6,
-    marginBottom: 4,
+    gap: 4,
+    marginBottom: 2,
   },
   indentText: {
-    marginLeft: 16,
-    marginBottom: 4,
+    marginLeft: 12,
+    marginBottom: 3,
   },
   bold: {
     fontWeight: "bold",
   },
   gridRow: {
     flexDirection: "row",
-    gap: 18,
+    gap: 12,
     alignItems: "flex-start",
-    marginTop: 8,
+    marginTop: 6,
   },
   column: {
     flex: 1,
   },
   sectionBox: {
-    padding: 6,
-    marginBottom: 12,
+    padding: 5,
+    marginBottom: 10,
     flex: 1,
   },
   sectionTitle: {
     fontWeight: "bold",
-    marginBottom: 6,
-    fontSize: 11,
+    marginBottom: 4,
+    fontSize: 10,
   },
   table: {},
   tableHeaderRow: {
@@ -81,36 +81,36 @@ const styles = StyleSheet.create({
   },
   tableHeaderCell: {
     ...cellBorder,
-    paddingVertical: 5,
-    paddingHorizontal: 5,
+    paddingVertical: 4,
+    paddingHorizontal: 4,
     justifyContent: "center",
     alignItems: "center",
   },
   tableHeaderText: {
     textAlign: "center",
     fontWeight: "bold",
-    fontSize: 9,
-    lineHeight: 1.15,
+    fontSize: 8,
+    lineHeight: 1.1,
   },
   tableRow: {
     flexDirection: "row",
-    minHeight: 40,
+    minHeight: 36,
   },
   cell: {
     ...cellBorder,
-    paddingVertical: 5,
-    paddingHorizontal: 5,
+    paddingVertical: 4,
+    paddingHorizontal: 4,
     justifyContent: "center",
     alignItems: "center",
   },
   cellText: {
-    fontSize: 10,
-    lineHeight: 1.3,
+    fontSize: 9,
+    lineHeight: 1.25,
     textAlign: "center",
   },
   footerList: {
-    marginTop: 8,
-    gap: 6,
+    marginTop: 6,
+    gap: 4,
   },
   footerLabel: { fontWeight: "bold" },
   footerLine: { marginTop: 2 },
@@ -139,7 +139,7 @@ export function WeeklyReportPdf({ data }: Props) {
 
   return (
     <Document>
-      <Page size="A4" orientation="landscape" style={styles.page}>
+      <Page size="A4" style={styles.page}>
         <Text style={styles.title}>研究室・週報（{yearLabel}年度）</Text>
 
         <View style={styles.topRow}>
@@ -275,7 +275,7 @@ function Table({ rows, headers }: TableProps) {
               <Text style={styles.cellText}>{hoursText}</Text>
             </View>
             <View style={[styles.cell, columnStyle(4)]}>
-              <Text style={[styles.cellText, { fontSize: 8.5, lineHeight: 1.25, textAlign: "left" }]}>
+              <Text style={[styles.cellText, { fontSize: 8, lineHeight: 1.2, textAlign: "left" }]}>
                 {row.content}
               </Text>
             </View>
@@ -290,13 +290,13 @@ function columnStyle(idx: number) {
   // widths roughly aligned to template
   switch (idx) {
     case 0:
-      return { width: 35 };
+      return { width: 32 };
     case 1:
-      return { width: 28, textAlign: "center" as const };
+      return { width: 24, textAlign: "center" as const };
     case 2:
-      return { width: 70 };
+      return { width: 60 };
     case 3:
-      return { width: 28, textAlign: "center" as const };
+      return { width: 24, textAlign: "center" as const };
     default:
       return { flex: 1 };
   }
