@@ -7,6 +7,7 @@ import { WeeklyReportPdf } from "@/pdf/WeeklyReportPdf";
 import { sanitizeNameForFilename } from "@/lib/weeklyReport";
 import type { WeeklyReportPayload } from "@/types/weeklyReport";
 import { PDFDocument } from "pdf-lib";
+import { persistWeeklyReportToDriveAndSheet } from "@/lib/reportStorage";
 
 export const runtime = "nodejs"; // React-PDF を使うので Node ランタイム
 
@@ -59,6 +60,11 @@ export async function POST(req: NextRequest) {
   const pdfBuffer = await pdf(doc).toBuffer();
   const trimmedPdfBuffer = await trimToSinglePage(pdfBuffer);
   const byteLength = trimmedPdfBuffer.byteLength;
+
+  // Fire-and-forget: backend side persistence for ops visibility
+  persistWeeklyReportToDriveAndSheet(parsed.data, trimmedPdfBuffer).catch((err) => {
+    console.error("Failed to persist weekly report to Drive/Sheets", err);
+  });
 
   if (byteLength <= 0) {
     console.error("PDF generation returned empty buffer");
