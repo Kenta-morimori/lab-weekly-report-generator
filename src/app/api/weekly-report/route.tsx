@@ -126,11 +126,7 @@ async function trimToSinglePage(
     const trimmed = await PDFDocument.create();
     const [firstPage] = await trimmed.copyPages(original, [0]);
     trimmed.addPage(firstPage);
-    const output = await trimmed.save();
-    return output.buffer.slice(
-      output.byteOffset,
-      output.byteOffset + output.byteLength,
-    );
+    return await trimmed.save(); // Uint8Array (ArrayBuffer under the hood)
   } catch (err) {
     console.error("Failed to trim PDF pages, returning original buffer", err);
     return toArrayBuffer(pdfInput);
