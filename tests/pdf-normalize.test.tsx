@@ -9,6 +9,11 @@ import {
 } from "@/lib/weeklyReport";
 import { WeeklyReportPdf } from "@/pdf/WeeklyReportPdf";
 import type { DayRecord, WeeklyReportPayload } from "@/types/weeklyReport";
+import { repeatToLength } from "@/lib/text";
+
+const shortText30 = repeatToLength("文字数上限テスト用の短文。", 30);
+const goalText25 = repeatToLength("研究目標を簡潔に書く", 25);
+const buildContent = (prefix: string) => repeatToLength(`${prefix} 研究概要`, 20);
 
 test("normalizePdfOutput converts ArrayBufferView into BodyInit", () => {
   const body = normalizePdfOutput(new Uint8Array([1, 2, 3]));
@@ -22,7 +27,11 @@ test("normalizePdfOutput throws on unexpected value", () => {
 
 test("PDF generation produces a downloadable body", async () => {
   const weekInfo = computeWeeksFromReference("2025-04-07");
-  const makeDay = (label: string): DayRecord => {
+  assert.equal(shortText30.length, 30);
+  assert.equal(goalText25.length, 25);
+  assert.equal(buildContent("prefix").length, 20);
+
+  const makeDay = (label: string, idx: number): DayRecord => {
     const breakStart = "12:00";
     const breakEnd = "13:00";
     const breakMinutes = calculateBreakMinutes(breakStart, breakEnd);
@@ -36,7 +45,7 @@ test("PDF generation produces a downloadable body", async () => {
       breakEnd,
       breakMinutes,
       minutes: calculateStayMinutes(stayStart, stayEnd, breakStart, breakEnd),
-      content: "テスト用の研究内容",
+      content: buildContent(`日${idx + 1}`),
     };
   };
 
@@ -46,16 +55,16 @@ test("PDF generation produces a downloadable body", async () => {
     submissionDate: weekInfo.submissionDate,
     prevWeekLabel: weekInfo.prevWeekLabel,
     currentWeekLabel: weekInfo.currentWeekLabel,
-    prevWeekDays: weekInfo.prevWeekDays.map((d) => makeDay(d.label)),
-    currentWeekDays: weekInfo.currentWeekDays.map((d) => makeDay(d.label)),
+    prevWeekDays: weekInfo.prevWeekDays.map((d, idx) => makeDay(d.label, idx)),
+    currentWeekDays: weekInfo.currentWeekDays.map((d, idx) => makeDay(d.label, idx)),
     totalPrevMinutes: 0,
     totalPrevHoursRounded: 0,
-    prevGoal: "サンプル",
+    prevGoal: goalText25,
     prevGoalResultPercent: 80,
-    achievedPoints: "達成点サンプル",
-    issues: "課題サンプル",
-    currentGoal: "今週目標サンプル",
-    notes: "備考サンプル",
+    achievedPoints: shortText30,
+    issues: shortText30,
+    currentGoal: goalText25,
+    notes: shortText30,
   };
 
   payload.totalPrevMinutes = payload.prevWeekDays.reduce((sum, d) => sum + d.minutes, 0);

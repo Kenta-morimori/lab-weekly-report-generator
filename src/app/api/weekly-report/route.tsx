@@ -6,6 +6,7 @@ import { z } from "zod";
 import { WeeklyReportPdf } from "@/pdf/WeeklyReportPdf";
 import { sanitizeNameForFilename } from "@/lib/weeklyReport";
 import type { WeeklyReportPayload } from "@/types/weeklyReport";
+import { PDFDocument } from "pdf-lib";
 
 export const runtime = "nodejs"; // React-PDF を使うので Node ランタイム
 
@@ -17,10 +18,11 @@ const daySchema = z.object({
   breakEnd: z.string(),
   breakMinutes: z.number().int().nonnegative(),
   minutes: z.number().int().nonnegative(),
-  content: z.string().max(200, "content must be <= 200 chars"),
+  content: z.string().max(20, "content must be <= 20 chars"),
 });
 
-const shortText = z.string().max(30, "text must be <= 30 chars");
+const shortText30 = z.string().max(30, "text must be <= 30 chars");
+const goalText25 = z.string().max(25, "text must be <= 25 chars");
 
 const weeklyReportSchema = z.object({
   yearLabel: z.string().min(1, "yearLabel is required"),
@@ -32,12 +34,12 @@ const weeklyReportSchema = z.object({
   currentWeekDays: z.array(daySchema).length(7, "currentWeekDays must have 7 entries"),
   totalPrevMinutes: z.number().int().nonnegative(),
   totalPrevHoursRounded: z.number().int().nonnegative(),
-  prevGoal: shortText,
+  prevGoal: goalText25,
   prevGoalResultPercent: z.number().int().min(0).max(100),
-  achievedPoints: shortText,
-  issues: shortText,
-  currentGoal: shortText,
-  notes: shortText,
+  achievedPoints: shortText30,
+  issues: shortText30,
+  currentGoal: goalText25,
+  notes: shortText30,
 });
 
 export async function POST(req: NextRequest) {
@@ -55,8 +57,8 @@ export async function POST(req: NextRequest) {
   const doc = <WeeklyReportPdf data={data} />;
 
   const pdfBuffer = await pdf(doc).toBuffer();
-  const arrayBuffer = await toArrayBuffer(pdfBuffer);
-  const byteLength = arrayBuffer.byteLength;
+  const trimmedPdfBuffer = await trimToSinglePage(pdfBuffer);
+  const byteLength = trimmedPdfBuffer.byteLength;
 
   if (byteLength <= 0) {
     console.error("PDF generation returned empty buffer");
@@ -66,7 +68,7 @@ export async function POST(req: NextRequest) {
   const safeName = sanitizeNameForFilename(data.name.trim()) || "noname";
   const filename = `週報_${safeName}_${data.submissionDate}.pdf`;
 
-  return new Response(arrayBuffer, {
+  return new Response(trimmedPdfBuffer, {
     status: 200,
     headers: {
       "Content-Type": "application/pdf",
@@ -110,6 +112,23 @@ export function normalizePdfOutput(value: unknown): BodyInit {
     return copyToArrayBuffer(view);
   } catch {
     throw new TypeError("Unexpected value type for PDF output");
+  }
+}
+
+async function trimToSinglePage(pdfInput: unknown): Promise<ArrayBuffer> {
+  try {
+    const normalized = await toArrayBuffer(pdfInput);
+    const original = await PDFDocument.load(normalized);
+    if (original.getPageCount() <= 1) return normalized;
+
+    const trimmed = await PDFDocument.create();
+    const [firstPage] = await trimmed.copyPages(original, [0]);
+    trimmed.addPage(firstPage);
+    const output = await trimmed.save();
+    return toArrayBuffer(output);
+  } catch (err) {
+    console.error("Failed to trim PDF pages, returning original buffer", err);
+    return toArrayBuffer(pdfInput);
   }
 }
 

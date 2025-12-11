@@ -48,6 +48,10 @@ const styles = StyleSheet.create({
     gap: 6,
     marginBottom: 4,
   },
+  labelRowTight: {
+    flexDirection: "row",
+    gap: 6,
+  },
   bold: {
     fontWeight: "bold",
   },
@@ -101,6 +105,9 @@ const styles = StyleSheet.create({
   },
   footerLabel: { fontWeight: "bold" },
   footerLine: { marginTop: 2 },
+  valueBelow: {
+    marginTop: 2,
+  },
 });
 
 type Props = {
@@ -141,23 +148,27 @@ export function WeeklyReportPdf({ data }: Props) {
               <Text>：</Text>
               <Text>{totalPrevHoursRounded} 時間（大学での滞在時間）</Text>
             </View>
-            <View style={styles.labelRow}>
-              <Text style={styles.bold}>前週の研究達成目標</Text>
-              <Text>：</Text>
-              <Text>{prevGoal}</Text>
+            <View>
+              <View style={styles.labelRowTight}>
+                <Text style={styles.bold}>前週の研究達成目標</Text>
+                <Text>：</Text>
+              </View>
+              <Text style={styles.valueBelow}>{prevGoal}</Text>
             </View>
           </View>
           <View>
             <View style={styles.labelRow}>
               <Text style={styles.bold}>今週の研究予定</Text>
             </View>
-            <View style={styles.labelRow}>
-              <Text style={styles.bold}>
-                研究達成目標（出来る限り数値目標）
-              </Text>
-              <Text>：</Text>
+            <View>
+              <View style={styles.labelRowTight}>
+                <Text style={styles.bold}>
+                  研究達成目標（出来る限り数値目標）
+                </Text>
+                <Text>：</Text>
+              </View>
+              <Text style={styles.valueBelow}>{currentGoal}</Text>
             </View>
-            <Text>{currentGoal}</Text>
           </View>
         </View>
 

@@ -18,7 +18,9 @@ import {
   roundHoursFromMinutes,
   sanitizeNameForFilename,
 } from "@/lib/weeklyReport";
+import type { DayTemplate } from "@/lib/weeklyReport";
 import type { DayRecord, WeeklyReportPayload } from "@/types/weeklyReport";
+import { repeatToLength } from "@/lib/text";
 
 type DayFormValue = {
   /** 画面表示用の日付（例: 2025-04-07 (月)） */
@@ -50,9 +52,18 @@ type DerivedDay = {
   errors: string[];
 };
 
-const TEXT_LIMIT = 30;
-const DAY_CONTENT_LIMIT = 200;
+const SHORT_TEXT_LIMIT = 30;
+const GOAL_TEXT_LIMIT = 25;
+const DAY_CONTENT_LIMIT = 20;
 const ERROR_PREFIX = "入力エラー:";
+
+const baseDayContentSeed = "研究概要と予定を簡潔に記述";
+const CONTENT_LIMIT_MESSAGE = `研究内容は${DAY_CONTENT_LIMIT}文字以内で入力してください`;
+
+const buildShortText = (prefix: string, limit: number) =>
+  repeatToLength(`${prefix} 数値目標や達成度を端的に示すテスト用文面。`, limit);
+const buildDayContent = (prefix: string) =>
+  repeatToLength(`${prefix} ${baseDayContentSeed}`, DAY_CONTENT_LIMIT);
 
 function parseTime(value: string): number | null {
   if (!value) return null;
@@ -67,6 +78,11 @@ function computeDayDerived(day: DayFormValue): DerivedDay {
   const end = parseTime(day.stayEnd);
   const breakStart = parseTime(day.breakStart);
   const breakEnd = parseTime(day.breakEnd);
+  const contentLength = (day.content ?? "").length;
+
+  if (contentLength > DAY_CONTENT_LIMIT) {
+    errors.push(`${ERROR_PREFIX} ${day.date} ${CONTENT_LIMIT_MESSAGE}`);
+  }
 
   if (start !== null && end !== null && end <= start) {
     errors.push(`${ERROR_PREFIX} ${day.date} 終了は開始より後にしてください`);
@@ -106,6 +122,13 @@ const createDayValue = (label: string): DayFormValue => ({
   content: "",
 });
 
+function mergeDayValues(source: DayFormValue[] | undefined, templates: DayTemplate[]) {
+  return templates.map((template, index) => {
+    const existing = source?.[index];
+    return existing ? { ...existing, date: template.label } : createDayValue(template.label);
+  });
+}
+
 const defaultValues: FormValues = {
   name: "",
   yearLabel: deriveFiscalYearLabel(),
@@ -131,6 +154,7 @@ export default function HomePage() {
     handleSubmit,
     watch,
     setValue,
+    getValues,
     formState: { isDirty },
   } = useForm<FormValues>({
     defaultValues,
@@ -163,14 +187,16 @@ export default function HomePage() {
     if (!referenceDate) return;
     try {
       const info = computeWeeksFromReference(referenceDate);
+      const prevValues = getValues("prevWeekDays");
+      const currentValues = getValues("currentWeekDays");
       setWeekInfo(info);
-      replacePrev(info.prevWeekDays.map((d) => createDayValue(d.label)));
-      replaceCurrent(info.currentWeekDays.map((d) => createDayValue(d.label)));
+      replacePrev(mergeDayValues(prevValues, info.prevWeekDays));
+      replaceCurrent(mergeDayValues(currentValues, info.currentWeekDays));
     } catch (err) {
       console.error(err);
       setError("日付の計算中に問題が発生しました。日付を確認してください。");
     }
-  }, [referenceDate, replacePrev, replaceCurrent, setValue]);
+  }, [referenceDate, replacePrev, replaceCurrent, getValues]);
 
   const prevComputedDays = (prevWeekDays ?? []).map(computeDayDerived);
   const currentComputedDays = (currentWeekDays ?? []).map(computeDayDerived);
@@ -257,29 +283,29 @@ export default function HomePage() {
   const fillSample = () => {
     const samplePrev = weekInfo.prevWeekDays.map((d, idx) => ({
       date: d.label,
-      stayStart: "10:00",
-      stayEnd: "20:00",
-      breakStart: idx === 0 ? "11:00" : "",
-      breakEnd: idx === 0 ? "13:00" : "",
-      content: idx === 0 ? "論文読みと実験計画" : "",
+      stayStart: "09:00",
+      stayEnd: "19:00",
+      breakStart: "12:00",
+      breakEnd: "13:00",
+      content: buildDayContent(`前週${idx + 1}日目`),
     }));
     const sampleCurrent = weekInfo.currentWeekDays.map((d, idx) => ({
       date: d.label,
-      stayStart: "10:00",
-      stayEnd: "18:00",
-      breakStart: idx === 0 ? "14:00" : "",
-      breakEnd: idx === 0 ? "15:00" : "",
-      content: idx === 0 ? "ミーティング・実装" : "",
+      stayStart: "09:30",
+      stayEnd: "18:30",
+      breakStart: "12:30",
+      breakEnd: "13:15",
+      content: buildDayContent(`今週${idx + 1}日目`),
     }));
 
     setValue("name", "テスト太郎");
     setValue("yearLabel", deriveFiscalYearLabel());
-    setValue("prevGoal", "前週の目標サンプル");
-    setValue("prevGoalResultPercent", 70);
-    setValue("achievedPoints", "達成点サンプル");
-    setValue("issues", "課題サンプル");
-    setValue("currentGoal", "今週の目標サンプル");
-    setValue("notes", "備考サンプル");
+    setValue("prevGoal", buildShortText("前週の目標", GOAL_TEXT_LIMIT));
+    setValue("prevGoalResultPercent", 80);
+    setValue("achievedPoints", buildShortText("達成点", SHORT_TEXT_LIMIT));
+    setValue("issues", buildShortText("課題と反省", SHORT_TEXT_LIMIT));
+    setValue("currentGoal", buildShortText("今週の目標", GOAL_TEXT_LIMIT));
+    setValue("notes", buildShortText("教員共有事項", SHORT_TEXT_LIMIT));
     replacePrev(samplePrev.map((d) => ({ ...createDayValue(d.date), ...d })));
     replaceCurrent(sampleCurrent.map((d) => ({ ...createDayValue(d.date), ...d })));
   };
@@ -343,8 +369,9 @@ export default function HomePage() {
               <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
                 <TextAreaField
                   label="前週の研究達成目標"
-                  {...register("prevGoal", { maxLength: TEXT_LIMIT })}
+                  {...register("prevGoal", { maxLength: GOAL_TEXT_LIMIT })}
                   count={textCounts.prevGoal}
+                  limit={GOAL_TEXT_LIMIT}
                 />
                 <GoalSlider
                   label="前週の目標達成度"
@@ -353,13 +380,15 @@ export default function HomePage() {
                 />
                 <TextAreaField
                   label="●達成点"
-                  {...register("achievedPoints", { maxLength: TEXT_LIMIT })}
+                  {...register("achievedPoints", { maxLength: SHORT_TEXT_LIMIT })}
                   count={textCounts.achievedPoints}
+                  limit={SHORT_TEXT_LIMIT}
                 />
                 <TextAreaField
                   label="●課題・反省点"
-                  {...register("issues", { maxLength: TEXT_LIMIT })}
+                  {...register("issues", { maxLength: SHORT_TEXT_LIMIT })}
                   count={textCounts.issues}
+                  limit={SHORT_TEXT_LIMIT}
                 />
               </div>
             </div>
@@ -369,13 +398,15 @@ export default function HomePage() {
               <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
                 <TextAreaField
                   label="今週の研究達成目標"
-                  {...register("currentGoal", { maxLength: TEXT_LIMIT })}
+                  {...register("currentGoal", { maxLength: GOAL_TEXT_LIMIT })}
                   count={textCounts.currentGoal}
+                  limit={GOAL_TEXT_LIMIT}
                 />
                 <TextAreaField
                   label="備考"
-                  {...register("notes", { maxLength: TEXT_LIMIT })}
+                  {...register("notes", { maxLength: SHORT_TEXT_LIMIT })}
                   count={textCounts.notes}
+                  limit={SHORT_TEXT_LIMIT}
                 />
               </div>
             </div>
@@ -391,6 +422,7 @@ export default function HomePage() {
               derivedDays={prevComputedDays}
               totalMinutes={totalPrevMinutes}
               register={register}
+              contentLabel="研究内容"
             />
             <DayTable
               title="今週（予定）"
@@ -401,6 +433,7 @@ export default function HomePage() {
               derivedDays={currentComputedDays}
               totalMinutes={totalCurrentMinutes}
               register={register}
+              contentLabel="研究内容 / 予定内容"
             />
           </section>
 
@@ -450,6 +483,7 @@ type DayTableProps<T extends "prevWeekDays" | "currentWeekDays"> = {
   derivedDays: DerivedDay[];
   totalMinutes: number;
   register: UseFormRegister<FormValues>;
+  contentLabel: string;
 };
 
 function DayTable<T extends "prevWeekDays" | "currentWeekDays">({
@@ -461,6 +495,7 @@ function DayTable<T extends "prevWeekDays" | "currentWeekDays">({
   derivedDays,
   totalMinutes,
   register,
+  contentLabel,
 }: DayTableProps<T>) {
   return (
     <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white/90 shadow-sm backdrop-blur">
@@ -481,7 +516,9 @@ function DayTable<T extends "prevWeekDays" | "currentWeekDays">({
           const derived = derivedDays[index];
           const minutes = derived?.minutes ?? 0;
           const breakMinutes = derived?.breakMinutes ?? 0;
-          const hasError = (derived?.errors?.length ?? 0) > 0;
+          const contentCount = day?.content?.length ?? 0;
+          const contentOver = contentCount > DAY_CONTENT_LIMIT;
+          const hasError = (derived?.errors?.length ?? 0) > 0 || contentOver;
           return (
             <div
               key={field.id}
@@ -529,15 +566,30 @@ function DayTable<T extends "prevWeekDays" | "currentWeekDays">({
                 </InlineField>
               </div>
 
-              <InlineField label="研究内容 / 予定内容">
+              <div className="flex flex-col gap-1 text-[11px] text-slate-700">
+                <div className="flex items-center justify-between">
+                  <span className="font-semibold">{contentLabel}</span>
+                  <span
+                    className={`text-[10px] ${contentOver ? "text-rose-600" : "text-slate-500"}`}
+                  >
+                    {contentCount} / {DAY_CONTENT_LIMIT} 文字
+                  </span>
+                </div>
                 <textarea
-                  {...register(`${prefix}.${index}.content` as const, { maxLength: DAY_CONTENT_LIMIT })}
-                  maxLength={DAY_CONTENT_LIMIT}
+                  {...register(`${prefix}.${index}.content` as const, {
+                    validate: (value) =>
+                      (value?.length ?? 0) <= DAY_CONTENT_LIMIT || CONTENT_LIMIT_MESSAGE,
+                  })}
                   rows={2}
-                  className="w-full rounded-lg border border-slate-200 bg-white px-2 py-1 text-xs shadow-inner focus:border-sky-400 focus:outline-none focus:ring-2 focus:ring-sky-100"
-                  placeholder="研究内容・行動を入力"
+                  className={`w-full rounded-lg border ${
+                    contentOver ? "border-rose-300 focus:border-rose-400 focus:ring-rose-100" : "border-slate-200 focus:border-sky-400 focus:ring-sky-100"
+                  } bg-white px-2 py-1 text-xs shadow-inner focus:outline-none focus:ring-2`}
+                  placeholder={`${DAY_CONTENT_LIMIT}文字以内で入力してください`}
                 />
-              </InlineField>
+                {contentOver ? (
+                  <p className="text-[10px] text-rose-600">{CONTENT_LIMIT_MESSAGE}</p>
+                ) : null}
+              </div>
 
               {hasError ? (
                 <ul className="list-disc pl-5 text-[11px] text-rose-700">
@@ -639,23 +691,24 @@ function GoalSlider({ label, value, onChange }: GoalSliderProps) {
 type TextAreaFieldProps = React.TextareaHTMLAttributes<HTMLTextAreaElement> & {
   label: string;
   count: number;
+  limit: number;
 };
 
-function TextAreaField({ label, count, ...rest }: TextAreaFieldProps) {
+function TextAreaField({ label, count, limit, ...rest }: TextAreaFieldProps) {
   return (
     <label className="flex flex-col gap-1 text-sm">
       <div className="flex items-center justify-between">
         <span className="font-semibold text-slate-800">{label}</span>
         <span className="text-[11px] text-slate-500">
-          {count} / {TEXT_LIMIT} 文字
+          {count} / {limit} 文字
         </span>
       </div>
       <textarea
         {...rest}
         rows={3}
-        maxLength={TEXT_LIMIT}
+        maxLength={limit}
         className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm shadow-inner focus:border-sky-400 focus:outline-none focus:ring-2 focus:ring-sky-100"
-        placeholder="30文字以内で入力してください"
+        placeholder={`${limit}文字以内で入力してください`}
       />
     </label>
   );
