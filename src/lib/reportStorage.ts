@@ -7,13 +7,15 @@ const DRIVE_FOLDER_ID = process.env.GOOGLE_DRIVE_FOLDER_ID;
 const SHEETS_ID = process.env.GOOGLE_SHEETS_ID;
 const SERVICE_ACCOUNT_EMAIL = process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL;
 const SERVICE_ACCOUNT_KEY = process.env.GOOGLE_SERVICE_ACCOUNT_KEY;
+const PERSIST_DRY_RUN = process.env.PERSIST_DRY_RUN === "true";
+const PERSIST_DEBUG_LOG = process.env.PERSIST_DEBUG_LOG === "true";
 
 function hasConfig(): boolean {
   return Boolean(DRIVE_FOLDER_ID && SHEETS_ID && SERVICE_ACCOUNT_EMAIL && SERVICE_ACCOUNT_KEY);
 }
 
 function buildAuth() {
-  const privateKey = (SERVICE_ACCOUNT_KEY || "").replace(/\\n/g, "\n");
+  const privateKey = (SERVICE_ACCOUNT_KEY ?? "").replace(/\\n/g, "\n");
   return new google.auth.GoogleAuth({
     credentials: {
       client_email: SERVICE_ACCOUNT_EMAIL,
@@ -31,10 +33,27 @@ type PersistResult = {
   webViewLink: string | null;
 };
 
+function logDebug(message: string, extra?: unknown) {
+  if (!PERSIST_DEBUG_LOG) return;
+  if (extra) {
+    console.info(message, extra);
+  } else {
+    console.info(message);
+  }
+}
+
 export async function persistWeeklyReportToDriveAndSheet(
   payload: WeeklyReportPayload,
   pdfBuffer: ArrayBuffer,
 ): Promise<PersistResult | null> {
+  if (PERSIST_DRY_RUN) {
+    logDebug("[reportStorage] dry-run enabled. Skipping Drive/Sheets write.", {
+      name: payload.name,
+      submissionDate: payload.submissionDate,
+    });
+    return { fileId: "dry-run", webViewLink: "dry-run" };
+  }
+
   if (!hasConfig()) {
     console.warn("[reportStorage] Google credentials or IDs are missing. Skipping persistence.");
     return null;
@@ -90,9 +109,20 @@ export async function persistWeeklyReportToDriveAndSheet(
       requestBody: { values: [row] },
     });
 
+    logDebug("[reportStorage] persisted weekly report", {
+      name: payload.name,
+      submissionDate: payload.submissionDate,
+      fileId,
+      webViewLink,
+    });
+
     return { fileId, webViewLink };
   } catch (err) {
-    console.error("[reportStorage] Failed to persist weekly report", err);
+    console.error("[reportStorage] Failed to persist weekly report", {
+      err,
+      name: payload.name,
+      submissionDate: payload.submissionDate,
+    });
     return null;
   }
 }

@@ -61,10 +61,11 @@ export async function POST(req: NextRequest) {
   const trimmedPdfBuffer = await trimToSinglePage(pdfBuffer);
   const byteLength = trimmedPdfBuffer.byteLength;
 
-  // Fire-and-forget: backend side persistence for ops visibility
-  persistWeeklyReportToDriveAndSheet(parsed.data, trimmedPdfBuffer).catch((err) => {
+  try {
+    await persistWeeklyReportToDriveAndSheet(parsed.data, trimmedPdfBuffer);
+  } catch (err) {
     console.error("Failed to persist weekly report to Drive/Sheets", err);
-  });
+  }
 
   if (byteLength <= 0) {
     console.error("PDF generation returned empty buffer");

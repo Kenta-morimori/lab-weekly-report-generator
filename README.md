@@ -53,5 +53,7 @@ Set the following environment variables for server-side storage of PDFs and回�
 - `GOOGLE_SHEETS_ID`: 回答を追記するスプレッドシートID
 - `GOOGLE_SERVICE_ACCOUNT_EMAIL`: サービスアカウントのメール
 - `GOOGLE_SERVICE_ACCOUNT_KEY`: サービスアカウント秘密鍵（`\n`は改行に置換されます）
+- `PERSIST_DRY_RUN` (optional): `"true"` でDrive/Sheets書き込みをスキップし、テスト用のダミー結果を返す
+- `PERSIST_DEBUG_LOG` (optional): `"true"` でDrive/Sheetsへの成功・失敗ログを出力（開発時のみ推奨）
 
 これらが未設定の場合、Drive/Sheetsへの保存はスキップされ、ユーザー向けのPDFダウンロード動作のみ行われます。
