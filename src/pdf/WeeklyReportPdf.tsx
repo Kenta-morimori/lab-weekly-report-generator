@@ -58,6 +58,7 @@ const styles = StyleSheet.create({
   gridRow: {
     flexDirection: "row",
     gap: 18,
+    minHeight: 680,
   },
   column: {
     flex: 1,
