@@ -44,3 +44,7 @@ npm run ci:local
 ```
 
 This runs lint -> PDF test -> production build.
+
+## Backend integrations
+
+現在、外部ストレージ（Google Drive / Sheets）連携は行っていません。必要に応じて別途実装してください。
