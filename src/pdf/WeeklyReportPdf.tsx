@@ -60,7 +60,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     gap: LAYOUT.gridGap,
     alignItems: "flex-start",
-    marginTop: 6,
+    marginTop: 12,
   },
   column: {
     flex: 1,
@@ -76,8 +76,8 @@ const styles = StyleSheet.create({
     fontSize: LAYOUT.section.title.fontSize,
   },
   tableWrapper: {
-    marginTop: 4,
-    marginBottom: 8,
+    marginTop: LAYOUT.tableWrapper.marginTop,
+    marginBottom: LAYOUT.tableWrapper.marginBottom,
   },
   table: {},
   tableHeaderRow: {
@@ -86,7 +86,7 @@ const styles = StyleSheet.create({
   },
   tableHeaderCell: {
     ...cellBorder,
-    paddingVertical: 4,
+    paddingVertical: LAYOUT.tableHeader.paddingVertical,
     paddingHorizontal: 4,
     justifyContent: "center",
     alignItems: "center",
@@ -189,8 +189,8 @@ export function WeeklyReportPdf({ data }: Props) {
                   rows={prevWeekDays}
                   headers={[
                     "日付",
-                    "曜日",
-                    "大学滞在\n時間帯",
+                    "曜",
+                    "時間帯",
                     "時間\n(h)",
                     "研究内容",
                   ]}
@@ -207,8 +207,8 @@ export function WeeklyReportPdf({ data }: Props) {
                   rows={currentWeekDays}
                   headers={[
                     "日付",
-                    "曜日",
-                    "大学滞在予定\n時間帯",
+                    "曜",
+                    "予定時間帯",
                     "時間\n(h)",
                     "研究内容",
                   ]}

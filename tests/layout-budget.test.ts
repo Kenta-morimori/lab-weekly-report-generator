@@ -23,7 +23,9 @@ test("layout fits within A4 portrait height budget", () => {
     LAYOUT.section.title.marginBottom;
 
   // Table block: header + rows + wrapper margins
-  const headerHeight = LAYOUT.tableHeader.fontSize * LAYOUT.tableHeader.lineHeight + 2 * 4;
+  const headerHeight =
+    LAYOUT.tableHeader.fontSize * LAYOUT.tableHeader.lineHeight +
+    2 * LAYOUT.tableHeader.paddingVertical;
   const rowsHeight = LAYOUT.tableRow.minHeight * 7;
   const tableBlock = sectionChrome + headerHeight + rowsHeight + LAYOUT.tableWrapper.marginTop + LAYOUT.tableWrapper.marginBottom;
 
