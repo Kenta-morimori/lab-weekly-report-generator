@@ -82,6 +82,11 @@ function computeDayDerived(day: DayFormValue): DerivedDay {
   const end = parseTime(day.stayEnd);
   const breakStart = parseTime(day.breakStart);
   const breakEnd = parseTime(day.breakEnd);
+  const contentLength = (day.content ?? "").length;
+
+  if (contentLength > DAY_CONTENT_LIMIT) {
+    errors.push(`${ERROR_PREFIX} ${day.date} 研究内容は${DAY_CONTENT_LIMIT}文字以内で入力してください`);
+  }
 
   if (start !== null && end !== null && end <= start) {
     errors.push(`${ERROR_PREFIX} ${day.date} 終了は開始より後にしてください`);
@@ -416,6 +421,7 @@ export default function HomePage() {
               derivedDays={prevComputedDays}
               totalMinutes={totalPrevMinutes}
               register={register}
+              contentLabel="研究内容"
             />
             <DayTable
               title="今週（予定）"
@@ -426,6 +432,7 @@ export default function HomePage() {
               derivedDays={currentComputedDays}
               totalMinutes={totalCurrentMinutes}
               register={register}
+              contentLabel="研究内容 / 予定内容"
             />
           </section>
 
@@ -475,6 +482,7 @@ type DayTableProps<T extends "prevWeekDays" | "currentWeekDays"> = {
   derivedDays: DerivedDay[];
   totalMinutes: number;
   register: UseFormRegister<FormValues>;
+  contentLabel: string;
 };
 
 function DayTable<T extends "prevWeekDays" | "currentWeekDays">({
@@ -486,6 +494,7 @@ function DayTable<T extends "prevWeekDays" | "currentWeekDays">({
   derivedDays,
   totalMinutes,
   register,
+  contentLabel,
 }: DayTableProps<T>) {
   return (
     <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white/90 shadow-sm backdrop-blur">
@@ -506,7 +515,9 @@ function DayTable<T extends "prevWeekDays" | "currentWeekDays">({
           const derived = derivedDays[index];
           const minutes = derived?.minutes ?? 0;
           const breakMinutes = derived?.breakMinutes ?? 0;
-          const hasError = (derived?.errors?.length ?? 0) > 0;
+          const contentCount = day?.content?.length ?? 0;
+          const contentOver = contentCount > DAY_CONTENT_LIMIT;
+          const hasError = (derived?.errors?.length ?? 0) > 0 || contentOver;
           return (
             <div
               key={field.id}
@@ -554,15 +565,30 @@ function DayTable<T extends "prevWeekDays" | "currentWeekDays">({
                 </InlineField>
               </div>
 
-              <InlineField label="研究内容 / 予定内容">
+              <div className="flex flex-col gap-1 text-[11px] text-slate-700">
+                <div className="flex items-center justify-between">
+                  <span className="font-semibold">{contentLabel}</span>
+                  <span
+                    className={`text-[10px] ${contentOver ? "text-rose-600" : "text-slate-500"}`}
+                  >
+                    {contentCount} / {DAY_CONTENT_LIMIT} 文字
+                  </span>
+                </div>
                 <textarea
-                  {...register(`${prefix}.${index}.content` as const, { maxLength: DAY_CONTENT_LIMIT })}
-                  maxLength={DAY_CONTENT_LIMIT}
+                  {...register(`${prefix}.${index}.content` as const, {
+                    validate: (value) =>
+                      (value?.length ?? 0) <= DAY_CONTENT_LIMIT || "文字数は制限以内にしてください",
+                  })}
                   rows={2}
-                  className="w-full rounded-lg border border-slate-200 bg-white px-2 py-1 text-xs shadow-inner focus:border-sky-400 focus:outline-none focus:ring-2 focus:ring-sky-100"
+                  className={`w-full rounded-lg border ${
+                    contentOver ? "border-rose-300 focus:border-rose-400 focus:ring-rose-100" : "border-slate-200 focus:border-sky-400 focus:ring-sky-100"
+                  } bg-white px-2 py-1 text-xs shadow-inner focus:outline-none focus:ring-2`}
                   placeholder={`${DAY_CONTENT_LIMIT}文字以内で入力してください`}
                 />
-              </InlineField>
+                {contentOver ? (
+                  <p className="text-[10px] text-rose-600">文字数は{DAY_CONTENT_LIMIT}文字以内にしてください。</p>
+                ) : null}
+              </div>
 
               {hasError ? (
                 <ul className="list-disc pl-5 text-[11px] text-rose-700">
