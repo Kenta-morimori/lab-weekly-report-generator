@@ -51,21 +51,19 @@ type DerivedDay = {
   errors: string[];
 };
 
-const TEXT_LIMIT = 30;
+const SHORT_TEXT_LIMIT = 30;
+const GOAL_TEXT_LIMIT = 25;
 const DAY_CONTENT_LIMIT = 20;
 const ERROR_PREFIX = "入力エラー:";
 
 const repeatToLength = (seed: string, limit: number) =>
   seed.repeat(Math.ceil(limit / seed.length)).slice(0, limit);
 
-const baseShortText = repeatToLength(
-  "数値目標や達成度を端的に示すテスト用文面。",
-  TEXT_LIMIT,
-);
 const baseDayContentSeed = "研究概要と予定を簡潔に記述";
 const baseDayContent = repeatToLength(baseDayContentSeed, DAY_CONTENT_LIMIT);
 
-const buildShortText = (prefix: string) => `${prefix} ${baseShortText}`.slice(0, TEXT_LIMIT);
+const buildShortText = (prefix: string, limit: number) =>
+  repeatToLength(`${prefix} 数値目標や達成度を端的に示すテスト用文面。`, limit);
 const buildDayContent = (prefix: string) =>
   repeatToLength(`${prefix} ${baseDayContentSeed}`, DAY_CONTENT_LIMIT);
 
@@ -304,12 +302,12 @@ export default function HomePage() {
 
     setValue("name", "テスト太郎");
     setValue("yearLabel", deriveFiscalYearLabel());
-    setValue("prevGoal", buildShortText("前週の目標"));
+    setValue("prevGoal", buildShortText("前週の目標", GOAL_TEXT_LIMIT));
     setValue("prevGoalResultPercent", 80);
-    setValue("achievedPoints", buildShortText("達成点"));
-    setValue("issues", buildShortText("課題と反省"));
-    setValue("currentGoal", buildShortText("今週の目標"));
-    setValue("notes", buildShortText("教員共有事項"));
+    setValue("achievedPoints", buildShortText("達成点", SHORT_TEXT_LIMIT));
+    setValue("issues", buildShortText("課題と反省", SHORT_TEXT_LIMIT));
+    setValue("currentGoal", buildShortText("今週の目標", GOAL_TEXT_LIMIT));
+    setValue("notes", buildShortText("教員共有事項", SHORT_TEXT_LIMIT));
     replacePrev(samplePrev.map((d) => ({ ...createDayValue(d.date), ...d })));
     replaceCurrent(sampleCurrent.map((d) => ({ ...createDayValue(d.date), ...d })));
   };
@@ -373,8 +371,9 @@ export default function HomePage() {
               <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
                 <TextAreaField
                   label="前週の研究達成目標"
-                  {...register("prevGoal", { maxLength: TEXT_LIMIT })}
+                  {...register("prevGoal", { maxLength: GOAL_TEXT_LIMIT })}
                   count={textCounts.prevGoal}
+                  limit={GOAL_TEXT_LIMIT}
                 />
                 <GoalSlider
                   label="前週の目標達成度"
@@ -383,13 +382,15 @@ export default function HomePage() {
                 />
                 <TextAreaField
                   label="●達成点"
-                  {...register("achievedPoints", { maxLength: TEXT_LIMIT })}
+                  {...register("achievedPoints", { maxLength: SHORT_TEXT_LIMIT })}
                   count={textCounts.achievedPoints}
+                  limit={SHORT_TEXT_LIMIT}
                 />
                 <TextAreaField
                   label="●課題・反省点"
-                  {...register("issues", { maxLength: TEXT_LIMIT })}
+                  {...register("issues", { maxLength: SHORT_TEXT_LIMIT })}
                   count={textCounts.issues}
+                  limit={SHORT_TEXT_LIMIT}
                 />
               </div>
             </div>
@@ -399,13 +400,15 @@ export default function HomePage() {
               <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
                 <TextAreaField
                   label="今週の研究達成目標"
-                  {...register("currentGoal", { maxLength: TEXT_LIMIT })}
+                  {...register("currentGoal", { maxLength: GOAL_TEXT_LIMIT })}
                   count={textCounts.currentGoal}
+                  limit={GOAL_TEXT_LIMIT}
                 />
                 <TextAreaField
                   label="備考"
-                  {...register("notes", { maxLength: TEXT_LIMIT })}
+                  {...register("notes", { maxLength: SHORT_TEXT_LIMIT })}
                   count={textCounts.notes}
+                  limit={SHORT_TEXT_LIMIT}
                 />
               </div>
             </div>
@@ -690,23 +693,24 @@ function GoalSlider({ label, value, onChange }: GoalSliderProps) {
 type TextAreaFieldProps = React.TextareaHTMLAttributes<HTMLTextAreaElement> & {
   label: string;
   count: number;
+  limit: number;
 };
 
-function TextAreaField({ label, count, ...rest }: TextAreaFieldProps) {
+function TextAreaField({ label, count, limit, ...rest }: TextAreaFieldProps) {
   return (
     <label className="flex flex-col gap-1 text-sm">
       <div className="flex items-center justify-between">
         <span className="font-semibold text-slate-800">{label}</span>
         <span className="text-[11px] text-slate-500">
-          {count} / {TEXT_LIMIT} 文字
+          {count} / {limit} 文字
         </span>
       </div>
       <textarea
         {...rest}
         rows={3}
-        maxLength={TEXT_LIMIT}
+        maxLength={limit}
         className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm shadow-inner focus:border-sky-400 focus:outline-none focus:ring-2 focus:ring-sky-100"
-        placeholder="30文字以内で入力してください"
+        placeholder={`${limit}文字以内で入力してください`}
       />
     </label>
   );

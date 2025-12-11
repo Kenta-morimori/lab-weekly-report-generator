@@ -13,7 +13,8 @@ import type { DayRecord, WeeklyReportPayload } from "@/types/weeklyReport";
 const repeatToLength = (seed: string, length: number) =>
   seed.repeat(Math.ceil(length / seed.length)).slice(0, length);
 
-const maxShortText = repeatToLength("文字数上限テスト用の短文。", 30);
+const shortText30 = repeatToLength("文字数上限テスト用の短文。", 30);
+const goalText25 = repeatToLength("研究目標を簡潔に書く", 25);
 const maxContent = repeatToLength("研究概要を簡潔に記載", 20);
 
 const buildContent = (prefix: string) => repeatToLength(`${prefix} 研究概要`, 20);
@@ -30,7 +31,8 @@ test("normalizePdfOutput throws on unexpected value", () => {
 
 test("PDF generation produces a downloadable body", async () => {
   const weekInfo = computeWeeksFromReference("2025-04-07");
-  assert.equal(maxShortText.length, 30);
+  assert.equal(shortText30.length, 30);
+  assert.equal(goalText25.length, 25);
   assert.equal(buildContent("prefix").length, 20);
 
   const makeDay = (label: string, idx: number): DayRecord => {
@@ -61,12 +63,12 @@ test("PDF generation produces a downloadable body", async () => {
     currentWeekDays: weekInfo.currentWeekDays.map((d, idx) => makeDay(d.label, idx)),
     totalPrevMinutes: 0,
     totalPrevHoursRounded: 0,
-    prevGoal: maxShortText,
+    prevGoal: goalText25,
     prevGoalResultPercent: 80,
-    achievedPoints: maxShortText,
-    issues: maxShortText,
-    currentGoal: maxShortText,
-    notes: maxShortText,
+    achievedPoints: shortText30,
+    issues: shortText30,
+    currentGoal: goalText25,
+    notes: shortText30,
   };
 
   payload.totalPrevMinutes = payload.prevWeekDays.reduce((sum, d) => sum + d.minutes, 0);

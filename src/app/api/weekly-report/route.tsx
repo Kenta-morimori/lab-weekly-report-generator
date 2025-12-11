@@ -20,7 +20,8 @@ const daySchema = z.object({
   content: z.string().max(20, "content must be <= 20 chars"),
 });
 
-const shortText = z.string().max(30, "text must be <= 30 chars");
+const shortText30 = z.string().max(30, "text must be <= 30 chars");
+const goalText25 = z.string().max(25, "text must be <= 25 chars");
 
 const weeklyReportSchema = z.object({
   yearLabel: z.string().min(1, "yearLabel is required"),
@@ -32,12 +33,12 @@ const weeklyReportSchema = z.object({
   currentWeekDays: z.array(daySchema).length(7, "currentWeekDays must have 7 entries"),
   totalPrevMinutes: z.number().int().nonnegative(),
   totalPrevHoursRounded: z.number().int().nonnegative(),
-  prevGoal: shortText,
+  prevGoal: goalText25,
   prevGoalResultPercent: z.number().int().min(0).max(100),
-  achievedPoints: shortText,
-  issues: shortText,
-  currentGoal: shortText,
-  notes: shortText,
+  achievedPoints: shortText30,
+  issues: shortText30,
+  currentGoal: goalText25,
+  notes: shortText30,
 });
 
 export async function POST(req: NextRequest) {
