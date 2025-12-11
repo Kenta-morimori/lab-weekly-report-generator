@@ -114,17 +114,7 @@ const styles = StyleSheet.create({
   },
   footerList: {
     marginTop: 6,
-    paddingTop: 4,
     gap: 4,
-  },
-  subSectionTitle: {
-    fontWeight: "bold",
-    marginTop: 6,
-    marginBottom: 4,
-    fontSize: 9,
-    borderTopWidth: 0.5,
-    borderTopColor: "#000",
-    paddingTop: 4,
   },
   footerLabel: { fontWeight: "bold" },
   footerLine: { marginTop: 2 },
@@ -188,8 +178,8 @@ export function WeeklyReportPdf({ data }: Props) {
           </View>
         </View>
 
+        {/* 表ブロック */}
         <View style={styles.gridRow}>
-          {/* 前週 */}
           <View style={styles.column}>
             <View style={styles.sectionBox}>
               <Text style={styles.sectionTitle}>前週（{prevWeekLabel}）</Text>
@@ -205,7 +195,33 @@ export function WeeklyReportPdf({ data }: Props) {
                   ]}
                 />
               </View>
-              <Text style={styles.subSectionTitle}>前週の振り返り（達成度・達成点・課題）</Text>
+            </View>
+          </View>
+
+          <View style={styles.column}>
+            <View style={styles.sectionBox}>
+              <Text style={styles.sectionTitle}>今週（{currentWeekLabel}）</Text>
+              <View style={styles.tableWrapper}>
+                <Table
+                  rows={currentWeekDays}
+                  headers={[
+                    "日付",
+                    "曜日",
+                    "大学滞在予定\n時間帯",
+                    "時間\n(h)",
+                    "研究内容",
+                  ]}
+                />
+              </View>
+            </View>
+          </View>
+        </View>
+
+        {/* フッターブロック（振り返り/備考） */}
+        <View style={styles.gridRow}>
+          <View style={styles.column}>
+            <View style={styles.sectionBox}>
+              <Text style={styles.sectionTitle}>前週の振り返り（達成度・達成点・課題）</Text>
               <View style={styles.footerList}>
                 <Text>
                   <Text style={styles.footerLabel}>前週の目標達成度：</Text> {prevGoalResultPercent}%
@@ -224,36 +240,22 @@ export function WeeklyReportPdf({ data }: Props) {
             </View>
           </View>
 
-          {/* 今週 */}
           <View style={styles.column}>
-              <View style={styles.sectionBox}>
-                <Text style={styles.sectionTitle}>今週（{currentWeekLabel}）</Text>
-              <View style={styles.tableWrapper}>
-                <Table
-                  rows={currentWeekDays}
-                  headers={[
-                    "日付",
-                    "曜日",
-                    "大学滞在予定\n時間帯",
-                    "時間\n(h)",
-                    "研究内容",
-                  ]}
-                />
-              </View>
-                <Text style={styles.subSectionTitle}>今週の備考（配慮事項など）</Text>
-                <View style={styles.footerList}>
-                  <Text style={styles.footerLine}>
-                    <Text style={styles.footerLabel}>備考（行動上配慮すべき内容）：</Text>
-                    {"\n"}
-                    {notes}
-                  </Text>
-                  <Text style={styles.footerLine}>
-                    <Text style={styles.footerLabel}>連絡内容（教員記述欄）：</Text>
-                    {"\n"}
-                  </Text>
-                </View>
+            <View style={styles.sectionBox}>
+              <Text style={styles.sectionTitle}>今週の備考（配慮事項など）</Text>
+              <View style={styles.footerList}>
+                <Text style={styles.footerLine}>
+                  <Text style={styles.footerLabel}>備考（行動上配慮すべき内容）：</Text>
+                  {"\n"}
+                  {notes}
+                </Text>
+                <Text style={styles.footerLine}>
+                  <Text style={styles.footerLabel}>連絡内容（教員記述欄）：</Text>
+                  {"\n"}
+                </Text>
               </View>
             </View>
+          </View>
         </View>
       </Page>
     </Document>
