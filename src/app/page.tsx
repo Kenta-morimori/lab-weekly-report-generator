@@ -18,6 +18,7 @@ import {
   roundHoursFromMinutes,
   sanitizeNameForFilename,
 } from "@/lib/weeklyReport";
+import type { DayTemplate } from "@/lib/weeklyReport";
 import type { DayRecord, WeeklyReportPayload } from "@/types/weeklyReport";
 
 type DayFormValue = {
@@ -53,6 +54,21 @@ type DerivedDay = {
 const TEXT_LIMIT = 30;
 const DAY_CONTENT_LIMIT = 200;
 const ERROR_PREFIX = "入力エラー:";
+
+const repeatToLength = (seed: string, limit: number) =>
+  seed.repeat(Math.ceil(limit / seed.length)).slice(0, limit);
+
+const baseShortText = repeatToLength(
+  "数値目標や達成度を端的に示すテスト用文面。",
+  TEXT_LIMIT,
+);
+const baseDayContent = repeatToLength(
+  "研究の背景・目的・手法・結果・考察・次のアクションを詳細に書き連ね、文字数上限でもPDF生成できるかを確認するためのテスト用コンテンツ。",
+  DAY_CONTENT_LIMIT,
+);
+
+const buildShortText = (prefix: string) => `${prefix} ${baseShortText}`.slice(0, TEXT_LIMIT);
+const buildDayContent = (prefix: string) => `${prefix} ${baseDayContent}`.slice(0, DAY_CONTENT_LIMIT);
 
 function parseTime(value: string): number | null {
   if (!value) return null;
@@ -106,6 +122,13 @@ const createDayValue = (label: string): DayFormValue => ({
   content: "",
 });
 
+function mergeDayValues(source: DayFormValue[] | undefined, templates: DayTemplate[]) {
+  return templates.map((template, index) => {
+    const existing = source?.[index];
+    return existing ? { ...existing, date: template.label } : createDayValue(template.label);
+  });
+}
+
 const defaultValues: FormValues = {
   name: "",
   yearLabel: deriveFiscalYearLabel(),
@@ -131,6 +154,7 @@ export default function HomePage() {
     handleSubmit,
     watch,
     setValue,
+    getValues,
     formState: { isDirty },
   } = useForm<FormValues>({
     defaultValues,
@@ -163,14 +187,16 @@ export default function HomePage() {
     if (!referenceDate) return;
     try {
       const info = computeWeeksFromReference(referenceDate);
+      const prevValues = getValues("prevWeekDays");
+      const currentValues = getValues("currentWeekDays");
       setWeekInfo(info);
-      replacePrev(info.prevWeekDays.map((d) => createDayValue(d.label)));
-      replaceCurrent(info.currentWeekDays.map((d) => createDayValue(d.label)));
+      replacePrev(mergeDayValues(prevValues, info.prevWeekDays));
+      replaceCurrent(mergeDayValues(currentValues, info.currentWeekDays));
     } catch (err) {
       console.error(err);
       setError("日付の計算中に問題が発生しました。日付を確認してください。");
     }
-  }, [referenceDate, replacePrev, replaceCurrent, setValue]);
+  }, [referenceDate, replacePrev, replaceCurrent, getValues]);
 
   const prevComputedDays = (prevWeekDays ?? []).map(computeDayDerived);
   const currentComputedDays = (currentWeekDays ?? []).map(computeDayDerived);
@@ -257,29 +283,29 @@ export default function HomePage() {
   const fillSample = () => {
     const samplePrev = weekInfo.prevWeekDays.map((d, idx) => ({
       date: d.label,
-      stayStart: "10:00",
-      stayEnd: "20:00",
-      breakStart: idx === 0 ? "11:00" : "",
-      breakEnd: idx === 0 ? "13:00" : "",
-      content: idx === 0 ? "論文読みと実験計画" : "",
+      stayStart: "09:00",
+      stayEnd: "19:00",
+      breakStart: "12:00",
+      breakEnd: "13:00",
+      content: buildDayContent(`前週${idx + 1}日目の詳細な研究記録。`),
     }));
     const sampleCurrent = weekInfo.currentWeekDays.map((d, idx) => ({
       date: d.label,
-      stayStart: "10:00",
-      stayEnd: "18:00",
-      breakStart: idx === 0 ? "14:00" : "",
-      breakEnd: idx === 0 ? "15:00" : "",
-      content: idx === 0 ? "ミーティング・実装" : "",
+      stayStart: "09:30",
+      stayEnd: "18:30",
+      breakStart: "12:30",
+      breakEnd: "13:15",
+      content: buildDayContent(`今週${idx + 1}日目の行動予定。`),
     }));
 
     setValue("name", "テスト太郎");
     setValue("yearLabel", deriveFiscalYearLabel());
-    setValue("prevGoal", "前週の目標サンプル");
-    setValue("prevGoalResultPercent", 70);
-    setValue("achievedPoints", "達成点サンプル");
-    setValue("issues", "課題サンプル");
-    setValue("currentGoal", "今週の目標サンプル");
-    setValue("notes", "備考サンプル");
+    setValue("prevGoal", buildShortText("前週の目標"));
+    setValue("prevGoalResultPercent", 80);
+    setValue("achievedPoints", buildShortText("達成点"));
+    setValue("issues", buildShortText("課題と反省"));
+    setValue("currentGoal", buildShortText("今週の目標"));
+    setValue("notes", buildShortText("教員共有事項"));
     replacePrev(samplePrev.map((d) => ({ ...createDayValue(d.date), ...d })));
     replaceCurrent(sampleCurrent.map((d) => ({ ...createDayValue(d.date), ...d })));
   };

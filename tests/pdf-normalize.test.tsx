@@ -10,6 +10,17 @@ import {
 import { WeeklyReportPdf } from "@/pdf/WeeklyReportPdf";
 import type { DayRecord, WeeklyReportPayload } from "@/types/weeklyReport";
 
+const repeatToLength = (seed: string, length: number) =>
+  seed.repeat(Math.ceil(length / seed.length)).slice(0, length);
+
+const maxShortText = repeatToLength("文字数上限テスト用の短文。", 30);
+const maxContent = repeatToLength(
+  "詳細な研究内容や予定をびっしり書き込んで、PDF生成時の文字数上限を検証するための文章。",
+  200,
+);
+
+const buildContent = (prefix: string) => `${prefix} ${maxContent}`.slice(0, 200);
+
 test("normalizePdfOutput converts ArrayBufferView into BodyInit", () => {
   const body = normalizePdfOutput(new Uint8Array([1, 2, 3]));
   const res = new Response(body);
@@ -22,7 +33,10 @@ test("normalizePdfOutput throws on unexpected value", () => {
 
 test("PDF generation produces a downloadable body", async () => {
   const weekInfo = computeWeeksFromReference("2025-04-07");
-  const makeDay = (label: string): DayRecord => {
+  assert.equal(maxShortText.length, 30);
+  assert.equal(buildContent("prefix").length, 200);
+
+  const makeDay = (label: string, idx: number): DayRecord => {
     const breakStart = "12:00";
     const breakEnd = "13:00";
     const breakMinutes = calculateBreakMinutes(breakStart, breakEnd);
@@ -36,7 +50,7 @@ test("PDF generation produces a downloadable body", async () => {
       breakEnd,
       breakMinutes,
       minutes: calculateStayMinutes(stayStart, stayEnd, breakStart, breakEnd),
-      content: "テスト用の研究内容",
+      content: buildContent(`日${idx + 1}の詳細な研究記録。`),
     };
   };
 
@@ -46,16 +60,16 @@ test("PDF generation produces a downloadable body", async () => {
     submissionDate: weekInfo.submissionDate,
     prevWeekLabel: weekInfo.prevWeekLabel,
     currentWeekLabel: weekInfo.currentWeekLabel,
-    prevWeekDays: weekInfo.prevWeekDays.map((d) => makeDay(d.label)),
-    currentWeekDays: weekInfo.currentWeekDays.map((d) => makeDay(d.label)),
+    prevWeekDays: weekInfo.prevWeekDays.map((d, idx) => makeDay(d.label, idx)),
+    currentWeekDays: weekInfo.currentWeekDays.map((d, idx) => makeDay(d.label, idx)),
     totalPrevMinutes: 0,
     totalPrevHoursRounded: 0,
-    prevGoal: "サンプル",
+    prevGoal: maxShortText,
     prevGoalResultPercent: 80,
-    achievedPoints: "達成点サンプル",
-    issues: "課題サンプル",
-    currentGoal: "今週目標サンプル",
-    notes: "備考サンプル",
+    achievedPoints: maxShortText,
+    issues: maxShortText,
+    currentGoal: maxShortText,
+    notes: maxShortText,
   };
 
   payload.totalPrevMinutes = payload.prevWeekDays.reduce((sum, d) => sum + d.minutes, 0);
