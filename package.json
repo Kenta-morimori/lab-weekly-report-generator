@@ -8,14 +8,12 @@
     "start": "next start",
     "lint": "eslint",
     "test:pdf": "tsx tests/pdf-normalize.test.tsx",
-    "test:storage": "tsx tests/reportStorage.test.ts",
-    "ci:local": "npm run lint && npm run test:pdf && npm run test:storage && npm run build"
+    "ci:local": "npm run lint && npm run test:pdf && npm run build"
   },
   "dependencies": {
     "@fontsource/noto-sans-jp": "^5.2.8",
     "@react-pdf/renderer": "^4.3.1",
     "date-fns": "^4.1.0",
-    "googleapis": "^168.0.0",
     "next": "16.0.7",
     "noto-sans-cjk-jp": "^1.0.1",
     "pdf-lib": "^1.17.1",

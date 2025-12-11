@@ -7,7 +7,6 @@ import { WeeklyReportPdf } from "@/pdf/WeeklyReportPdf";
 import { sanitizeNameForFilename } from "@/lib/weeklyReport";
 import type { WeeklyReportPayload } from "@/types/weeklyReport";
 import { PDFDocument } from "pdf-lib";
-import { persistWeeklyReportToDriveAndSheet } from "@/lib/reportStorage";
 
 export const runtime = "nodejs"; // React-PDF を使うので Node ランタイム
 
@@ -44,12 +43,6 @@ const weeklyReportSchema = z.object({
 });
 
 export async function POST(req: NextRequest) {
-  const debugMode = req.nextUrl.searchParams.get("debug") === "true";
-  const persistLogs: { message: string; extra?: unknown }[] = [];
-  const debugLogger = (message: string, extra?: unknown) => {
-    persistLogs.push({ message, extra });
-  };
-
   const body = (await req.json()) as WeeklyReportPayload;
 
   const parsed = weeklyReportSchema.safeParse(body);
@@ -67,12 +60,6 @@ export async function POST(req: NextRequest) {
   const trimmedPdfBuffer = await trimToSinglePage(pdfBuffer);
   const byteLength = trimmedPdfBuffer.byteLength;
 
-  try {
-    await persistWeeklyReportToDriveAndSheet(parsed.data, trimmedPdfBuffer, debugMode ? { debugLogger } : undefined);
-  } catch (err) {
-    console.error("Failed to persist weekly report to Drive/Sheets", err);
-  }
-
   if (byteLength <= 0) {
     console.error("PDF generation returned empty buffer");
     return new Response("Failed to generate PDF (empty output)", { status: 500 });
@@ -89,9 +76,6 @@ export async function POST(req: NextRequest) {
       "Content-Disposition": `attachment; filename="${encodeURIComponent(
         filename,
       )}"`,
-      ...(debugMode && persistLogs.length > 0
-        ? { "X-Persist-Logs": encodeURIComponent(JSON.stringify(persistLogs)) }
-        : {}),
     },
   });
 }
