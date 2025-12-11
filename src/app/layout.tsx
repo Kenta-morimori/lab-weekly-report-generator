@@ -21,6 +21,8 @@ export const metadata: Metadata = {
   description: "前週・今週の記録から週報 PDF を作成します。",
   icons: {
     icon: "/favicon.png",
+    shortcut: "/favicon.png",
+    apple: "/favicon.png",
   },
   openGraph: {
     title: "研究室・週報 PDF ジェネレーター",
