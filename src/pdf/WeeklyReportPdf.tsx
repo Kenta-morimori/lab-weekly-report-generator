@@ -2,6 +2,7 @@
 
 import path from "node:path";
 import { Document, Page, Text, View, StyleSheet, Font } from "@react-pdf/renderer";
+import { LAYOUT } from "./layoutMetrics";
 import type { WeeklyReportPayload } from "@/types/weeklyReport";
 
 Font.register({
@@ -26,22 +27,22 @@ const cellBorder = {
 
 const styles = StyleSheet.create({
   page: {
-    paddingTop: 26,
-    paddingBottom: 18,
-    paddingHorizontal: 20,
+    paddingTop: LAYOUT.paddingTop,
+    paddingBottom: LAYOUT.paddingBottom,
+    paddingHorizontal: LAYOUT.paddingHorizontal,
     fontFamily: "MPlus1pJP",
     fontSize: 9,
     lineHeight: 1.3,
   },
   title: {
-    fontSize: 14,
+    fontSize: LAYOUT.title.fontSize,
     textAlign: "center",
-    marginBottom: 10,
+    marginBottom: LAYOUT.title.marginBottom,
   },
   topRow: {
     flexDirection: "row",
     justifyContent: "space-between",
-    marginBottom: 10,
+    marginBottom: LAYOUT.topRow.marginBottom,
   },
   labelRow: {
     flexDirection: "row",
@@ -57,7 +58,7 @@ const styles = StyleSheet.create({
   },
   gridRow: {
     flexDirection: "row",
-    gap: 12,
+    gap: LAYOUT.gridGap,
     alignItems: "flex-start",
     marginTop: 6,
   },
@@ -65,14 +66,14 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   sectionBox: {
-    padding: 5,
-    marginBottom: 10,
+    padding: LAYOUT.section.padding,
+    marginBottom: LAYOUT.section.marginBottom,
     flex: 1,
   },
   sectionTitle: {
     fontWeight: "bold",
-    marginBottom: 8,
-    fontSize: 10,
+    marginBottom: LAYOUT.section.title.marginBottom,
+    fontSize: LAYOUT.section.title.fontSize,
   },
   tableWrapper: {
     marginTop: 4,
@@ -93,8 +94,8 @@ const styles = StyleSheet.create({
   tableHeaderText: {
     textAlign: "center",
     fontWeight: "bold",
-    fontSize: 8,
-    lineHeight: 1.1,
+    fontSize: LAYOUT.tableHeader.fontSize,
+    lineHeight: LAYOUT.tableHeader.lineHeight,
   },
   tableRow: {
     flexDirection: "row",
@@ -312,13 +313,13 @@ function columnStyle(idx: number) {
   // widths roughly aligned to template
   switch (idx) {
     case 0:
-      return { width: 30 };
+      return { width: LAYOUT.columns.date };
     case 1:
-      return { width: 22, textAlign: "center" as const };
+      return { width: LAYOUT.columns.weekday, textAlign: "center" as const };
     case 2:
-      return { width: 66 };
+      return { width: LAYOUT.columns.timeRange };
     case 3:
-      return { width: 22, textAlign: "center" as const };
+      return { width: LAYOUT.columns.hours, textAlign: "center" as const };
     default:
       return { flex: 1 };
   }
