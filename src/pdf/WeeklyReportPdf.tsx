@@ -71,8 +71,11 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     fontWeight: "bold",
-    marginBottom: 4,
+    marginBottom: 8,
     fontSize: 10,
+  },
+  tableWrapper: {
+    marginTop: 4,
   },
   table: {},
   tableHeaderRow: {
@@ -109,7 +112,10 @@ const styles = StyleSheet.create({
     textAlign: "center",
   },
   footerList: {
-    marginTop: 6,
+    marginTop: 8,
+    paddingTop: 6,
+    borderTopWidth: 0.5,
+    borderTopColor: "#000",
     gap: 4,
   },
   footerLabel: { fontWeight: "bold" },
@@ -179,16 +185,18 @@ export function WeeklyReportPdf({ data }: Props) {
           <View style={styles.column}>
             <View style={styles.sectionBox}>
               <Text style={styles.sectionTitle}>前週（{prevWeekLabel}）</Text>
-              <Table
-                rows={prevWeekDays}
-                headers={[
-                  "日付",
-                  "曜日",
-                  "大学滞在\n時間帯",
-                  "時間\n(h)",
-                  "研究内容",
-                ]}
-              />
+              <View style={styles.tableWrapper}>
+                <Table
+                  rows={prevWeekDays}
+                  headers={[
+                    "日付",
+                    "曜日",
+                    "大学滞在\n時間帯",
+                    "時間\n(h)",
+                    "研究内容",
+                  ]}
+                />
+              </View>
               <View style={styles.footerList}>
                 <Text>
                   <Text style={styles.footerLabel}>前週の目標達成度：</Text> {prevGoalResultPercent}%
@@ -211,16 +219,18 @@ export function WeeklyReportPdf({ data }: Props) {
           <View style={styles.column}>
               <View style={styles.sectionBox}>
                 <Text style={styles.sectionTitle}>今週（{currentWeekLabel}）</Text>
-              <Table
-                rows={currentWeekDays}
-                headers={[
-                  "日付",
-                  "曜日",
-                  "大学滞在予定\n時間帯",
-                  "時間\n(h)",
-                  "研究内容",
-                ]}
-              />
+              <View style={styles.tableWrapper}>
+                <Table
+                  rows={currentWeekDays}
+                  headers={[
+                    "日付",
+                    "曜日",
+                    "大学滞在予定\n時間帯",
+                    "時間\n(h)",
+                    "研究内容",
+                  ]}
+                />
+              </View>
                 <View style={styles.footerList}>
                   <Text style={styles.footerLine}>
                     <Text style={styles.footerLabel}>備考（行動上配慮すべき内容）：</Text>
