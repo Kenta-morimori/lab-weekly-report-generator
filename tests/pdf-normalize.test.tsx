@@ -9,9 +9,7 @@ import {
 } from "@/lib/weeklyReport";
 import { WeeklyReportPdf } from "@/pdf/WeeklyReportPdf";
 import type { DayRecord, WeeklyReportPayload } from "@/types/weeklyReport";
-
-const repeatToLength = (seed: string, length: number) =>
-  seed.repeat(Math.ceil(length / seed.length)).slice(0, length);
+import { repeatToLength } from "@/lib/text";
 
 const shortText30 = repeatToLength("文字数上限テスト用の短文。", 30);
 const goalText25 = repeatToLength("研究目標を簡潔に書く", 25);

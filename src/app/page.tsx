@@ -20,6 +20,7 @@ import {
 } from "@/lib/weeklyReport";
 import type { DayTemplate } from "@/lib/weeklyReport";
 import type { DayRecord, WeeklyReportPayload } from "@/types/weeklyReport";
+import { repeatToLength } from "@/lib/text";
 
 type DayFormValue = {
   /** 画面表示用の日付（例: 2025-04-07 (月)） */
@@ -56,10 +57,8 @@ const GOAL_TEXT_LIMIT = 25;
 const DAY_CONTENT_LIMIT = 20;
 const ERROR_PREFIX = "入力エラー:";
 
-const repeatToLength = (seed: string, limit: number) =>
-  seed.repeat(Math.ceil(limit / seed.length)).slice(0, limit);
-
 const baseDayContentSeed = "研究概要と予定を簡潔に記述";
+const CONTENT_LIMIT_MESSAGE = `研究内容は${DAY_CONTENT_LIMIT}文字以内で入力してください`;
 
 const buildShortText = (prefix: string, limit: number) =>
   repeatToLength(`${prefix} 数値目標や達成度を端的に示すテスト用文面。`, limit);
@@ -82,7 +81,7 @@ function computeDayDerived(day: DayFormValue): DerivedDay {
   const contentLength = (day.content ?? "").length;
 
   if (contentLength > DAY_CONTENT_LIMIT) {
-    errors.push(`${ERROR_PREFIX} ${day.date} 研究内容は${DAY_CONTENT_LIMIT}文字以内で入力してください`);
+    errors.push(`${ERROR_PREFIX} ${day.date} ${CONTENT_LIMIT_MESSAGE}`);
   }
 
   if (start !== null && end !== null && end <= start) {
@@ -579,7 +578,7 @@ function DayTable<T extends "prevWeekDays" | "currentWeekDays">({
                 <textarea
                   {...register(`${prefix}.${index}.content` as const, {
                     validate: (value) =>
-                      (value?.length ?? 0) <= DAY_CONTENT_LIMIT || "文字数は制限以内にしてください",
+                      (value?.length ?? 0) <= DAY_CONTENT_LIMIT || CONTENT_LIMIT_MESSAGE,
                   })}
                   rows={2}
                   className={`w-full rounded-lg border ${
@@ -588,7 +587,7 @@ function DayTable<T extends "prevWeekDays" | "currentWeekDays">({
                   placeholder={`${DAY_CONTENT_LIMIT}文字以内で入力してください`}
                 />
                 {contentOver ? (
-                  <p className="text-[10px] text-rose-600">文字数は{DAY_CONTENT_LIMIT}文字以内にしてください。</p>
+                  <p className="text-[10px] text-rose-600">{CONTENT_LIMIT_MESSAGE}</p>
                 ) : null}
               </div>
 
