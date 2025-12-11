@@ -58,8 +58,7 @@ export async function POST(req: NextRequest) {
 
   const pdfBuffer = await pdf(doc).toBuffer();
   const trimmedPdfBuffer = await trimToSinglePage(pdfBuffer);
-  const arrayBuffer = await toArrayBuffer(trimmedPdfBuffer);
-  const byteLength = arrayBuffer.byteLength;
+  const byteLength = trimmedPdfBuffer.byteLength;
 
   if (byteLength <= 0) {
     console.error("PDF generation returned empty buffer");
@@ -117,20 +116,24 @@ export function normalizePdfOutput(value: unknown): BodyInit {
 }
 
 async function trimToSinglePage(
-  pdfInput: ArrayBuffer | Buffer | Uint8Array,
-): Promise<ArrayBuffer | Buffer | Uint8Array> {
+  pdfInput: unknown,
+): Promise<ArrayBuffer> {
   try {
-    const original = await PDFDocument.load(pdfInput);
-    if (original.getPageCount() <= 1) return pdfInput;
+    const normalized = await toArrayBuffer(pdfInput);
+    const original = await PDFDocument.load(normalized);
+    if (original.getPageCount() <= 1) return normalized;
 
     const trimmed = await PDFDocument.create();
     const [firstPage] = await trimmed.copyPages(original, [0]);
     trimmed.addPage(firstPage);
     const output = await trimmed.save();
-    return output;
+    return output.buffer.slice(
+      output.byteOffset,
+      output.byteOffset + output.byteLength,
+    );
   } catch (err) {
     console.error("Failed to trim PDF pages, returning original buffer", err);
-    return pdfInput;
+    return toArrayBuffer(pdfInput);
   }
 }
 
