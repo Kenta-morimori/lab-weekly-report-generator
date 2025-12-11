@@ -76,6 +76,7 @@ const styles = StyleSheet.create({
   },
   tableWrapper: {
     marginTop: 4,
+    marginBottom: 4,
   },
   table: {},
   tableHeaderRow: {
@@ -112,11 +113,18 @@ const styles = StyleSheet.create({
     textAlign: "center",
   },
   footerList: {
-    marginTop: 8,
-    paddingTop: 6,
+    marginTop: 6,
+    paddingTop: 4,
+    gap: 4,
+  },
+  subSectionTitle: {
+    fontWeight: "bold",
+    marginTop: 6,
+    marginBottom: 4,
+    fontSize: 9,
     borderTopWidth: 0.5,
     borderTopColor: "#000",
-    gap: 4,
+    paddingTop: 4,
   },
   footerLabel: { fontWeight: "bold" },
   footerLine: { marginTop: 2 },
@@ -197,6 +205,7 @@ export function WeeklyReportPdf({ data }: Props) {
                   ]}
                 />
               </View>
+              <Text style={styles.subSectionTitle}>前週の振り返り（達成度・達成点・課題）</Text>
               <View style={styles.footerList}>
                 <Text>
                   <Text style={styles.footerLabel}>前週の目標達成度：</Text> {prevGoalResultPercent}%
@@ -231,6 +240,7 @@ export function WeeklyReportPdf({ data }: Props) {
                   ]}
                 />
               </View>
+                <Text style={styles.subSectionTitle}>今週の備考（配慮事項など）</Text>
                 <View style={styles.footerList}>
                   <Text style={styles.footerLine}>
                     <Text style={styles.footerLabel}>備考（行動上配慮すべき内容）：</Text>
