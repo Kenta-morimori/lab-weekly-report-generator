@@ -68,7 +68,7 @@ export async function POST(req: NextRequest) {
   const safeName = sanitizeNameForFilename(data.name.trim()) || "noname";
   const filename = `週報_${safeName}_${data.submissionDate}.pdf`;
 
-  return new Response(arrayBuffer, {
+  return new Response(trimmedPdfBuffer, {
     status: 200,
     headers: {
       "Content-Type": "application/pdf",
